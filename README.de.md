@@ -59,7 +59,7 @@ doclatch --protect --allow print,copy *.pdf                           # nur Eins
 **Updates:** Einstellungen → Updates → „Nach Updates suchen“ fragt bei GitHub die neueste Versionsnummer ab.
 Dort lässt sich auch eine automatische Prüfung beim Start einschalten (höchstens einmal täglich); sie ist
 standardmäßig aus. Abgefragt wird nur die Versionsnummer, nichts wird heruntergeladen oder installiert, und
-es werden keine Informationen über dich oder deine Dateien gesendet. Nur dabei verbindet sich die App mit
+es werden keine persönlichen Daten oder Dateiinhalte gesendet. Nur dabei verbindet sich die App mit
 dem Internet. Für die Abfrage dient `curl`, das in gängigen Linux-Distributionen, macOS und Windows 10/11
 enthalten ist.
 

@@ -56,8 +56,8 @@ doclatch --protect --allow print,copy *.pdf                            # restric
 
 **Updates:** Settings → Updates → “Check for updates” asks GitHub for the latest version number.
 An automatic check at startup (at most once a day) can be switched on there; it is off by default.
-Only the version number is requested, nothing is downloaded or installed, and no information about
-you or your files is sent. This is the only time the app connects to the internet.
+Only the version number is requested, nothing is downloaded or installed, and no personal data or
+file contents are sent. This is the only time the app connects to the internet.
 The check uses `curl`, which is included in common Linux distributions, macOS and Windows 10/11.
 
 ## Download
