@@ -42,6 +42,14 @@ wayland = ["eframe/wayland", "rfd/wayland"]
 # Screenreader-Unterstützung (AccessKit), zieht unter Linux D-Bus-Bibliotheken nach.
 accessibility = ["eframe/accesskit"]
 
+# Debug-Builds schlank halten: nur Zeilentabellen für das eigene Crate (Panics zeigen
+# weiterhin Datei und Zeile), keine Debug-Infos für Abhängigkeiten.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 [profile.release]
 opt-level = 3
 lto = true
