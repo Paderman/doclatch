@@ -1,4 +1,6 @@
-//! „Im Ordner anzeigen“: öffnet den Dateimanager und markiert die Datei.
+//! Übergaben an das Betriebssystem: Datei im Dateimanager zeigen, Webseite im Browser öffnen.
+//!
+//! „Im Ordner anzeigen“ öffnet den Dateimanager und markiert die Datei.
 //!
 //! - Linux: D-Bus `org.freedesktop.FileManager1.ShowItems` (Dolphin, Nautilus, Nemo, Caja, Thunar …),
 //!   aufgerufen über `dbus-send` bzw. `gdbus`; Rückfall: Ordner mit `xdg-open` öffnen (ohne Markierung).
@@ -66,6 +68,25 @@ fn reveal_blocking(p: &Path) -> std::io::Result<()> {
     let s = s.strip_prefix(r"\\?\").unwrap_or(&s);
     // Explorer erwartet genau diese Schreibweise; raw_arg verhindert zusätzliches Quoting.
     std::process::Command::new("explorer").raw_arg(format!("/select,\"{s}\"")).spawn().map(|_| ())
+}
+
+/// Öffnet eine Webseite im Standardbrowser (nur `https://`-Adressen).
+pub fn open_url(url: &str) {
+    if !url.starts_with("https://") {
+        return;
+    }
+    let url = url.to_string();
+    std::thread::spawn(move || {
+        #[cfg(all(unix, not(target_os = "macos")))]
+        let r = std::process::Command::new("xdg-open").arg(&url).spawn();
+        #[cfg(target_os = "macos")]
+        let r = std::process::Command::new("open").arg(&url).spawn();
+        #[cfg(windows)]
+        let r = std::process::Command::new("explorer").arg(&url).spawn();
+        if let Err(e) = r {
+            eprintln!("Could not open browser: {e}");
+        }
+    });
 }
 
 /// `file://`-URI mit Prozent-Kodierung (Leerzeichen, Umlaute, Sonderzeichen).

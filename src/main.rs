@@ -2,10 +2,11 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod core;
+mod desktop;
 mod gui;
 mod i18n;
-mod reveal;
 mod settings;
+mod update;
 
 use std::path::PathBuf;
 use std::process::ExitCode;

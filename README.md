@@ -2,9 +2,15 @@
 
 **English** · [Deutsch](README.de.md)
 
+<p align="center">
+  <img src="docs/screenshots/unlock-dark.png" width="32%" alt="Unlock view showing the permissions of a restricted PDF">
+  <img src="docs/screenshots/protect-light.png" width="32%" alt="Protect view with open password and allowed actions">
+  <img src="docs/screenshots/settings-dark.png" width="32%" alt="Settings with theme, language and updates">
+</p>
+
 Removes password protection and permission restrictions (printing, copying, editing) from PDF files –
 or protects PDFs with AES-256, an open password and selected restrictions.
-Pure Rust, runs natively on Linux, Windows and macOS. Everything happens locally; nothing is uploaded.
+Pure Rust, runs natively on Linux, Windows and macOS. Files are processed locally and never uploaded.
 
 > To remove an **open password**, you need to know the password (user or owner password).
 > Pure restrictions (the PDF opens without a password) are removed without any input.
@@ -47,6 +53,12 @@ doclatch --protect --allow print,copy *.pdf                            # restric
 ```
 
 `doclatch --help` lists all options.
+
+**Updates:** Settings → Updates → “Check for updates” asks GitHub for the latest version number.
+An automatic check at startup (at most once a day) can be switched on there; it is off by default.
+Only the version number is requested, nothing is downloaded or installed, and no information about
+you or your files is sent. This is the only time the app connects to the internet.
+The check uses `curl`, which is included in common Linux distributions, macOS and Windows 10/11.
 
 ## Download
 

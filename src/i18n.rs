@@ -191,6 +191,15 @@ strings!(
     dest_label,
     show_in_folder,
     signed_note,
+    updates,
+    check_updates,
+    checking_updates,
+    up_to_date,
+    update_available,
+    open_download,
+    update_failed,
+    auto_check,
+    update_privacy,
 );
 
 pub static EN: Strings = Strings {
@@ -282,6 +291,15 @@ pub static EN: Strings = Strings {
     dest_label: "Save to",
     show_in_folder: "Show in folder",
     signed_note: "Digitally signed – the signature becomes invalid when the file is changed",
+    updates: "Updates",
+    check_updates: "Check for updates",
+    checking_updates: "Checking…",
+    up_to_date: "You are using the latest version ({v}).",
+    update_available: "Version {v} is available.",
+    open_download: "Open download page",
+    update_failed: "Could not check for updates: {e}",
+    auto_check: "Check automatically at startup (at most once a day)",
+    update_privacy: "Only the latest version number is requested from GitHub. No information about you or your files is sent. Nothing is downloaded or installed automatically.",
 };
 
 pub static DE: Strings = Strings {
@@ -373,6 +391,15 @@ pub static DE: Strings = Strings {
     dest_label: "Speichern in",
     show_in_folder: "Im Ordner anzeigen",
     signed_note: "Digital signiert – die Signatur wird beim Bearbeiten ungültig",
+    updates: "Updates",
+    check_updates: "Nach Updates suchen",
+    checking_updates: "Wird geprüft …",
+    up_to_date: "Du verwendest die neueste Version ({v}).",
+    update_available: "Version {v} ist verfügbar.",
+    open_download: "Download-Seite öffnen",
+    update_failed: "Updates konnten nicht geprüft werden: {e}",
+    auto_check: "Beim Start automatisch prüfen (höchstens einmal täglich)",
+    update_privacy: "Dabei wird nur die neueste Versionsnummer bei GitHub abgefragt. Es werden keine Informationen über dich oder deine Dateien gesendet. Nichts wird automatisch heruntergeladen oder installiert.",
 };
 
 pub static FR: Strings = Strings {
@@ -464,6 +491,15 @@ pub static FR: Strings = Strings {
     dest_label: "Enregistrer dans",
     show_in_folder: "Afficher dans le dossier",
     signed_note: "Signé numériquement – la signature devient invalide si le fichier est modifié",
+    updates: "Mises à jour",
+    check_updates: "Rechercher des mises à jour",
+    checking_updates: "Vérification…",
+    up_to_date: "Vous utilisez la dernière version ({v}).",
+    update_available: "La version {v} est disponible.",
+    open_download: "Ouvrir la page de téléchargement",
+    update_failed: "Impossible de vérifier les mises à jour : {e}",
+    auto_check: "Vérifier automatiquement au démarrage (au plus une fois par jour)",
+    update_privacy: "Seul le dernier numéro de version est demandé à GitHub. Aucune information sur vous ou vos fichiers n’est envoyée. Rien n’est téléchargé ni installé automatiquement.",
 };
 
 pub static ES: Strings = Strings {
@@ -555,6 +591,15 @@ pub static ES: Strings = Strings {
     dest_label: "Guardar en",
     show_in_folder: "Mostrar en la carpeta",
     signed_note: "Firmado digitalmente: la firma deja de ser válida si se modifica el archivo",
+    updates: "Actualizaciones",
+    check_updates: "Buscar actualizaciones",
+    checking_updates: "Comprobando…",
+    up_to_date: "Estás usando la versión más reciente ({v}).",
+    update_available: "La versión {v} está disponible.",
+    open_download: "Abrir la página de descarga",
+    update_failed: "No se pudieron buscar actualizaciones: {e}",
+    auto_check: "Comprobar automáticamente al iniciar (como máximo una vez al día)",
+    update_privacy: "Solo se consulta a GitHub el número de la última versión. No se envía ninguna información sobre ti ni sobre tus archivos. No se descarga ni instala nada automáticamente.",
 };
 
 pub static IT: Strings = Strings {
@@ -646,6 +691,15 @@ pub static IT: Strings = Strings {
     dest_label: "Salva in",
     show_in_folder: "Mostra nella cartella",
     signed_note: "Firmato digitalmente – la firma non sarà più valida se il file viene modificato",
+    updates: "Aggiornamenti",
+    check_updates: "Cerca aggiornamenti",
+    checking_updates: "Verifica…",
+    up_to_date: "Stai usando la versione più recente ({v}).",
+    update_available: "È disponibile la versione {v}.",
+    open_download: "Apri la pagina di download",
+    update_failed: "Impossibile verificare gli aggiornamenti: {e}",
+    auto_check: "Controlla automaticamente all’avvio (al massimo una volta al giorno)",
+    update_privacy: "Viene richiesto a GitHub solo il numero dell’ultima versione. Non viene inviata alcuna informazione su di te o sui tuoi file. Nulla viene scaricato o installato automaticamente.",
 };
 
 pub static PT: Strings = Strings {
@@ -737,6 +791,15 @@ pub static PT: Strings = Strings {
     dest_label: "Salvar em",
     show_in_folder: "Mostrar na pasta",
     signed_note: "Assinado digitalmente – a assinatura deixa de ser válida se o arquivo for alterado",
+    updates: "Atualizações",
+    check_updates: "Procurar atualizações",
+    checking_updates: "Verificando…",
+    up_to_date: "Você está usando a versão mais recente ({v}).",
+    update_available: "A versão {v} está disponível.",
+    open_download: "Abrir a página de download",
+    update_failed: "Não foi possível procurar atualizações: {e}",
+    auto_check: "Verificar automaticamente ao iniciar (no máximo uma vez por dia)",
+    update_privacy: "Apenas o número da versão mais recente é consultado no GitHub. Nenhuma informação sobre você ou seus arquivos é enviada. Nada é baixado ou instalado automaticamente.",
 };
 
 pub static NL: Strings = Strings {
@@ -828,6 +891,15 @@ pub static NL: Strings = Strings {
     dest_label: "Opslaan in",
     show_in_folder: "In map weergeven",
     signed_note: "Digitaal ondertekend – de handtekening wordt ongeldig als het bestand wordt gewijzigd",
+    updates: "Updates",
+    check_updates: "Naar updates zoeken",
+    checking_updates: "Controleren…",
+    up_to_date: "Je gebruikt de nieuwste versie ({v}).",
+    update_available: "Versie {v} is beschikbaar.",
+    open_download: "Downloadpagina openen",
+    update_failed: "Kon niet op updates controleren: {e}",
+    auto_check: "Automatisch controleren bij het starten (hooguit één keer per dag)",
+    update_privacy: "Er wordt alleen het nieuwste versienummer bij GitHub opgevraagd. Er wordt geen informatie over jou of je bestanden verzonden. Er wordt niets automatisch gedownload of geïnstalleerd.",
 };
 
 pub static PL: Strings = Strings {
@@ -919,6 +991,15 @@ pub static PL: Strings = Strings {
     dest_label: "Zapisz w",
     show_in_folder: "Pokaż w folderze",
     signed_note: "Podpisany cyfrowo – po zmianie pliku podpis stanie się nieważny",
+    updates: "Aktualizacje",
+    check_updates: "Sprawdź aktualizacje",
+    checking_updates: "Sprawdzanie…",
+    up_to_date: "Używasz najnowszej wersji ({v}).",
+    update_available: "Dostępna jest wersja {v}.",
+    open_download: "Otwórz stronę pobierania",
+    update_failed: "Nie udało się sprawdzić aktualizacji: {e}",
+    auto_check: "Sprawdzaj automatycznie przy uruchomieniu (najwyżej raz dziennie)",
+    update_privacy: "Z GitHuba pobierany jest tylko numer najnowszej wersji. Nie są wysyłane żadne informacje o Tobie ani o Twoich plikach. Nic nie jest automatycznie pobierane ani instalowane.",
 };
 
 pub static TR: Strings = Strings {
@@ -1010,6 +1091,15 @@ pub static TR: Strings = Strings {
     dest_label: "Kayıt yeri",
     show_in_folder: "Klasörde göster",
     signed_note: "Dijital olarak imzalı – dosya değiştirilirse imza geçersiz olur",
+    updates: "Güncellemeler",
+    check_updates: "Güncellemeleri denetle",
+    checking_updates: "Denetleniyor…",
+    up_to_date: "En son sürümü kullanıyorsunuz ({v}).",
+    update_available: "{v} sürümü kullanılabilir.",
+    open_download: "İndirme sayfasını aç",
+    update_failed: "Güncellemeler denetlenemedi: {e}",
+    auto_check: "Başlangıçta otomatik denetle (günde en fazla bir kez)",
+    update_privacy: "GitHub'dan yalnızca en son sürüm numarası sorgulanır. Sizinle veya dosyalarınızla ilgili hiçbir bilgi gönderilmez. Hiçbir şey otomatik olarak indirilmez veya yüklenmez.",
 };
 
 pub static RU: Strings = Strings {
@@ -1101,6 +1191,15 @@ pub static RU: Strings = Strings {
     dest_label: "Сохранить в",
     show_in_folder: "Показать в папке",
     signed_note: "Подписан цифровой подписью – при изменении файла подпись станет недействительной",
+    updates: "Обновления",
+    check_updates: "Проверить обновления",
+    checking_updates: "Проверка…",
+    up_to_date: "Вы используете последнюю версию ({v}).",
+    update_available: "Доступна версия {v}.",
+    open_download: "Открыть страницу загрузки",
+    update_failed: "Не удалось проверить обновления: {e}",
+    auto_check: "Проверять автоматически при запуске (не чаще раза в день)",
+    update_privacy: "У GitHub запрашивается только номер последней версии. Никакие сведения о вас или ваших файлах не передаются. Ничего не скачивается и не устанавливается автоматически.",
 };
 
 pub static UK: Strings = Strings {
@@ -1192,6 +1291,15 @@ pub static UK: Strings = Strings {
     dest_label: "Зберегти в",
     show_in_folder: "Показати в теці",
     signed_note: "Підписано цифровим підписом – після змінення файлу підпис стане недійсним",
+    updates: "Оновлення",
+    check_updates: "Перевірити оновлення",
+    checking_updates: "Перевірка…",
+    up_to_date: "Ви використовуєте найновішу версію ({v}).",
+    update_available: "Доступна версія {v}.",
+    open_download: "Відкрити сторінку завантаження",
+    update_failed: "Не вдалося перевірити оновлення: {e}",
+    auto_check: "Перевіряти автоматично під час запуску (не частіше ніж раз на день)",
+    update_privacy: "У GitHub запитується лише номер найновішої версії. Жодні відомості про вас чи ваші файли не надсилаються. Нічого не завантажується й не встановлюється автоматично.",
 };
 
 #[cfg(test)]

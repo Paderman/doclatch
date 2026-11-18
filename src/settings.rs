@@ -27,6 +27,10 @@ pub enum LangPref {
 pub struct Settings {
     pub theme: ThemePref,
     pub lang: LangPref,
+    /// Beim Start automatisch nach Updates suchen (Standard: aus)
+    pub update_check: bool,
+    /// Zeitpunkt der letzten Update-Prüfung (Unix-Sekunden)
+    pub last_update_check: u64,
 }
 
 impl Settings {
@@ -40,6 +44,8 @@ impl Settings {
                 ("theme", "light") => s.theme = ThemePref::Light,
                 ("theme", _) => s.theme = ThemePref::Auto,
                 ("lang", v) => s.lang = Lang::from_code(v).map_or(LangPref::Auto, LangPref::Fixed),
+                ("update_check", v) => s.update_check = v == "on",
+                ("last_update_check", v) => s.last_update_check = v.parse().unwrap_or(0),
                 _ => {}
             }
         }
@@ -56,7 +62,8 @@ impl Settings {
             LangPref::Auto => "auto",
             LangPref::Fixed(l) => l.code(),
         };
-        format!("theme={theme}\nlang={lang}\n")
+        let update = if self.update_check { "on" } else { "off" };
+        format!("theme={theme}\nlang={lang}\nupdate_check={update}\nlast_update_check={}\n", self.last_update_check)
     }
 
     pub fn path() -> Option<PathBuf> {
@@ -220,7 +227,12 @@ mod tests {
 
     #[test]
     fn einstellungen_hin_und_zurueck() {
-        let s = Settings { theme: ThemePref::Light, lang: LangPref::Fixed(Lang::Pl) };
+        let s = Settings {
+            theme: ThemePref::Light,
+            lang: LangPref::Fixed(Lang::Pl),
+            update_check: true,
+            last_update_check: 1_790_000_000,
+        };
         assert_eq!(Settings::parse(&s.serialize()), s);
         assert_eq!(Settings::parse(&Settings::default().serialize()), Settings::default());
         // Kaputtes/Unbekanntes führt zu Standardwerten

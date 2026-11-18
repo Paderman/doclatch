@@ -3,14 +3,15 @@
 use crate::core::{self, ALL_PERMISSIONS, Permissions, ProtectOptions, Protection, UnlockError};
 use crate::i18n::{Lang, Strings, fill};
 use crate::settings::{LangPref, Settings, ThemePref, ThemeWatcher};
+use crate::update::{self, UpdateState};
 use eframe::egui::{
     self, Align, Color32, CornerRadius, FontId, Frame, Layout, Margin, RichText, Sense, Stroke, StrokeKind, Vec2,
 };
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::{Arc, Mutex};
 
 // ---------- Design-Tokens ----------
 struct Palette {
@@ -196,6 +197,8 @@ pub struct App {
     lang: Lang,
     applied_dark: Option<bool>,
     theme_watch: ThemeWatcher,
+    /// Ergebnis der Update-Prüfung (wird vom Hintergrund-Thread geschrieben)
+    update: Arc<Mutex<UpdateState>>,
 }
 
 impl App {
@@ -233,10 +236,42 @@ impl App {
             lang: resolve_lang(settings.lang, detected_lang),
             applied_dark: None,
             theme_watch: if persist { ThemeWatcher::start(cc.egui_ctx.clone()) } else { ThemeWatcher::disabled() },
+            update: Arc::new(Mutex::new(UpdateState::Idle)),
         };
         app.update_theme(&cc.egui_ctx);
+        // Automatische Update-Prüfung nur, wenn ausdrücklich eingeschaltet (Standard: aus)
+        if persist && settings.update_check && update::due(settings.last_update_check, update::now_unix()) {
+            app.start_update_check(&cc.egui_ctx);
+        }
         app.add_files(initial);
         app
+    }
+
+    fn update_state(&self) -> UpdateState {
+        self.update.lock().map(|s| s.clone()).unwrap_or(UpdateState::Idle)
+    }
+
+    /// Fragt im Hintergrund nach der neuesten Version (siehe `update.rs`).
+    fn start_update_check(&mut self, ctx: &egui::Context) {
+        {
+            let Ok(mut st) = self.update.lock() else { return };
+            if *st == UpdateState::Checking {
+                return;
+            }
+            *st = UpdateState::Checking;
+        }
+        let (shared, ctx2) = (self.update.clone(), ctx.clone());
+        std::thread::spawn(move || {
+            let result = update::check();
+            if let Ok(mut st) = shared.lock() {
+                *st = result;
+            }
+            ctx2.request_repaint();
+        });
+        self.settings.last_update_check = update::now_unix();
+        if self.persist {
+            let _ = self.settings.save();
+        }
     }
 
     fn t(&self) -> &'static Strings {
@@ -525,6 +560,10 @@ impl eframe::App for App {
                 match self.view {
                     View::Settings => self.settings_view(ui, &ctx),
                     View::Main => {
+                        if let UpdateState::Available { version, url } = self.update_state() {
+                            self.update_banner(ui, &version, &url);
+                            ui.add_space(12.0);
+                        }
                         // Aktionsleiste ist immer sichtbar; der Bereich darüber scrollt, wenn das
                         // Fenster zu niedrig ist. Die Liste bekommt den freien Platz, mindestens MIN_LIST.
                         let viewport = (ui.available_height() - ACTION_BAR_H).max(MIN_LIST);
@@ -748,7 +787,7 @@ impl App {
                                             Status::Done(out, _) => Some(out),
                                             _ => None,
                                         };
-                                        crate::reveal::reveal(&crate::reveal::target_for(&e.path, done));
+                                        crate::desktop::reveal(&crate::desktop::target_for(&e.path, done));
                                     }
                                     let b = badge(ui, pal, t, &e.status);
                                     // Berechtigungen als Info beim Überfahren
@@ -1095,6 +1134,27 @@ impl App {
         ui.label(RichText::new(t.protect_note).size(11.5).color(pal.muted));
     }
 
+    /// Dezenter Hinweis oben in der Hauptansicht, wenn eine neuere Version gefunden wurde.
+    fn update_banner(&mut self, ui: &mut egui::Ui, version: &str, url: &str) {
+        let (pal, t) = (self.pal(), self.t());
+        Frame::new()
+            .fill(pal.accent.gamma_multiply(0.12))
+            .stroke(Stroke::new(1.0, pal.accent.gamma_multiply(0.5)))
+            .corner_radius(CornerRadius::same(10))
+            .inner_margin(Margin::symmetric(12, 8))
+            .show(ui, |ui| {
+                ui.set_width(ui.available_width());
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(format!("🔄 {}", fill(t.update_available, "v", version))).color(pal.text));
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if ui.small_button(format!("⬇ {}", t.open_download)).clicked() {
+                            crate::desktop::open_url(url);
+                        }
+                    });
+                });
+            });
+    }
+
     fn settings_view(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
         let (pal, t) = (self.pal(), self.t());
         let mut s = self.settings;
@@ -1112,6 +1172,7 @@ impl App {
         });
         ui.add_space(14.0);
 
+        let mut check_now = false;
         egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
             card(ui, pal, |ui| {
                 section_title(ui, pal, "🎨", t.appearance);
@@ -1148,6 +1209,46 @@ impl App {
             ui.add_space(10.0);
 
             card(ui, pal, |ui| {
+                section_title(ui, pal, "🔄", t.updates);
+                let state = self.update_state();
+                ui.horizontal_wrapped(|ui| {
+                    let checking = state == UpdateState::Checking;
+                    let b =
+                        egui::Button::new(RichText::new(if checking { t.checking_updates } else { t.check_updates }))
+                            .fill(pal.surface_hi)
+                            .corner_radius(CornerRadius::same(8));
+                    check_now = ui.add_enabled(!checking, b).clicked();
+                    match &state {
+                        UpdateState::UpToDate => {
+                            ui.label(
+                                RichText::new(format!("✔ {}", fill(t.up_to_date, "v", update::CURRENT)))
+                                    .color(pal.success),
+                            );
+                        }
+                        UpdateState::Failed(e) => {
+                            ui.add(
+                                egui::Label::new(RichText::new(fill(t.update_failed, "e", e)).color(pal.error)).wrap(),
+                            );
+                        }
+                        _ => {}
+                    }
+                });
+                if let UpdateState::Available { version, url } = &state {
+                    ui.add_space(6.0);
+                    ui.horizontal_wrapped(|ui| {
+                        ui.label(RichText::new(fill(t.update_available, "v", version)).strong().color(pal.accent_hi));
+                        if ui.button(format!("⬇ {}", t.open_download)).clicked() {
+                            crate::desktop::open_url(url);
+                        }
+                    });
+                }
+                ui.add_space(6.0);
+                ui.checkbox(&mut s.update_check, RichText::new(t.auto_check).color(pal.text));
+                ui.add(egui::Label::new(RichText::new(t.update_privacy).size(12.0).color(pal.muted)).wrap());
+            });
+            ui.add_space(10.0);
+
+            card(ui, pal, |ui| {
                 section_title(ui, pal, "ℹ", t.about);
                 ui.label(
                     RichText::new(format!("Doclatch {}  ·  {}", env!("CARGO_PKG_VERSION"), env!("CARGO_PKG_LICENSE")))
@@ -1168,6 +1269,9 @@ impl App {
         });
 
         self.set_settings(s, ctx);
+        if check_now {
+            self.start_update_check(ctx);
+        }
     }
 }
 
@@ -1416,7 +1520,7 @@ mod tests {
     }
 
     fn harness_with(files: Vec<PathBuf>, lang: Lang, theme: ThemePref, size: [f32; 2]) -> Harness<'static, App> {
-        let settings = Settings { theme, lang: LangPref::Fixed(lang) };
+        let settings = Settings { theme, lang: LangPref::Fixed(lang), ..Settings::default() };
         Harness::builder().with_size(size).build_eframe(move |cc| App::build(cc, files, settings, false))
     }
 
@@ -1694,6 +1798,65 @@ mod tests {
         h.run_steps(2);
         assert!(h.state().entries[0].signed);
         h.get_by_label(EN.signed_note);
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn update_bereich_ohne_netz() {
+        let mut h = harness(vec![]);
+        h.get_by_label("⚙").click();
+        h.run_steps(2);
+        h.get_by_label(EN.updates);
+        // automatische Prüfung ist standardmäßig aus und lässt sich einschalten
+        assert!(!h.state().settings.update_check);
+        h.get_by_label(EN.auto_check).click();
+        h.run_steps(2);
+        assert!(h.state().settings.update_check);
+        // gefundene Version: Hinweis in der Hauptansicht
+        *h.state().update.lock().unwrap() =
+            UpdateState::Available { version: "9.9.9".into(), url: "https://example.invalid".into() };
+        h.get_by_label(&format!("⬅  {}", EN.back)).click();
+        h.run_steps(2);
+        h.get_by_label(&format!("🔄 {}", fill(EN.update_available, "v", "9.9.9")));
+    }
+
+    /// Screenshots fürs README (englisch, neutrale Beispieldateien):
+    /// `cargo test readme_screenshots -- --ignored` → `docs/screenshots/*.png`
+    #[test]
+    #[ignore]
+    fn readme_screenshots() {
+        let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("docs/screenshots");
+        std::fs::create_dir_all(&out).unwrap();
+        let dir = std::env::temp_dir().join("Documents");
+        std::fs::create_dir_all(&dir).unwrap();
+        let mixed = Permissions::PRINTABLE
+            | Permissions::PRINTABLE_IN_HIGH_QUALITY
+            | Permissions::FILLABLE
+            | Permissions::COPYABLE_FOR_ACCESSIBILITY;
+        let restricted = crate::core::tests::encrypted_file_with(&dir, "report.pdf", 4, "", "owner", mixed);
+        std::fs::copy(&restricted, dir.join("invoice.pdf")).unwrap();
+        encrypted_file(&dir, "contract.pdf", 5, "secret", "owner");
+        signed_sample().save(dir.join("application-form.pdf")).unwrap();
+        let names = ["report.pdf", "contract.pdf", "invoice.pdf", "application-form.pdf"];
+        let files: Vec<PathBuf> = names.iter().map(|n| dir.join(n)).collect();
+
+        let shot = |name: &str, theme: ThemePref, files: Vec<PathBuf>, prep: &dyn Fn(&mut Harness<'static, App>)| {
+            let mut h = harness_with(files, Lang::En, theme, [680.0, 780.0]);
+            wait(&mut h, checked);
+            prep(&mut h);
+            h.run_steps(6);
+            h.render().expect("Rendern fehlgeschlagen").save(out.join(format!("{name}.png"))).unwrap();
+        };
+        shot("unlock-dark", ThemePref::Dark, files.clone(), &|h| {
+            h.run_steps(2);
+            h.query_all_by_label_contains(EN.st_restricted).next().expect("Badge fehlt").hover();
+        });
+        shot("protect-light", ThemePref::Light, files[..1].to_vec(), &|h| {
+            h.state_mut().mode = Mode::Protect;
+            h.state_mut().open_pw = "example".into();
+            h.state_mut().allowed = Permissions::PRINTABLE | Permissions::COPYABLE_FOR_ACCESSIBILITY;
+        });
+        shot("settings-dark", ThemePref::Dark, vec![], &|h| h.state_mut().view = View::Settings);
         std::fs::remove_dir_all(dir).ok();
     }
 }

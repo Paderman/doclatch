@@ -2,9 +2,17 @@
 
 [English](README.md) · **Deutsch**
 
+<p align="center">
+  <img src="docs/screenshots/unlock-dark.png" width="32%" alt="Entsperren-Ansicht mit den Berechtigungen einer eingeschränkten PDF">
+  <img src="docs/screenshots/protect-light.png" width="32%" alt="Schützen-Ansicht mit Öffnen-Passwort und erlaubten Aktionen">
+  <img src="docs/screenshots/settings-dark.png" width="32%" alt="Einstellungen mit Theme, Sprache und Updates">
+</p>
+
+Die Screenshots zeigen die englische Oberfläche; die Sprache lässt sich in den Einstellungen umstellen.
+
 Entfernt Passwortschutz und Rechte-Einschränkungen (Drucken, Kopieren, Bearbeiten) aus PDF-Dateien –
 oder schützt PDFs mit AES-256, Öffnen-Passwort und gezielten Einschränkungen.
-Reines Rust, läuft nativ auf Linux, Windows und macOS. Alles passiert lokal, nichts wird hochgeladen.
+Reines Rust, läuft nativ auf Linux, Windows und macOS. Dateien werden lokal verarbeitet und nie hochgeladen.
 
 > Zum Entfernen eines **Öffnen-Passworts** muss das Passwort bekannt sein (Benutzer- oder Besitzer-Passwort).
 > Reine Einschränkungen (PDF öffnet sich ohne Passwort) werden ohne Eingabe entfernt.
@@ -47,6 +55,13 @@ doclatch --protect --allow print,copy *.pdf                           # nur Eins
 ```
 
 `doclatch --help` zeigt alle Optionen.
+
+**Updates:** Einstellungen → Updates → „Nach Updates suchen“ fragt bei GitHub die neueste Versionsnummer ab.
+Dort lässt sich auch eine automatische Prüfung beim Start einschalten (höchstens einmal täglich); sie ist
+standardmäßig aus. Abgefragt wird nur die Versionsnummer, nichts wird heruntergeladen oder installiert, und
+es werden keine Informationen über dich oder deine Dateien gesendet. Nur dabei verbindet sich die App mit
+dem Internet. Für die Abfrage dient `curl`, das in gängigen Linux-Distributionen, macOS und Windows 10/11
+enthalten ist.
 
 ## Download
 
