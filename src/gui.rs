@@ -62,6 +62,10 @@ const SOFT_LIMIT: usize = 1000;
 const LARGE_FILE: u64 = 500 * 1024 * 1024;
 /// Feste Kartenhöhe – nötig für die virtualisierte Liste.
 const CARD_H: f32 = 60.0;
+/// Mindesthöhe der Dateiliste, bevor die Ansicht stattdessen scrollt.
+const MIN_LIST: f32 = 110.0;
+/// Platz für die Aktionsleiste unten (Knopfhöhe + Abstand).
+const ACTION_BAR_H: f32 = 54.0;
 
 // ---------- Zustand ----------
 /// Fehlergrund – sprachunabhängig gespeichert, Text erst beim Anzeigen übersetzt.
@@ -177,8 +181,8 @@ pub struct App {
     owner_pw: String,
     show_new_pw: bool,
     allowed: Permissions,
-    /// Höhe des unteren Bereichs im letzten Bild (die Liste füllt den Rest)
-    controls_h: f32,
+    /// Höhe aller Elemente außer der Liste im letzten Bild (die Liste füllt den Rest)
+    other_h: f32,
     settings: Settings,
     /// Einstellungen auf die Platte schreiben (in Tests aus)
     persist: bool,
@@ -217,7 +221,7 @@ impl App {
             owner_pw: String::new(),
             show_new_pw: false,
             allowed: ALL_PERMISSIONS,
-            controls_h: 180.0,
+            other_h: 360.0,
             settings,
             persist,
             detected_lang,
@@ -249,7 +253,9 @@ impl App {
                 ctx.system_theme().map(|t| t == egui::Theme::Dark).or(self.theme_watch.is_dark()).unwrap_or(true)
             }
         };
-        if self.applied_dark != Some(dark) {
+        // Auch neu anwenden, wenn jemand anderes das Theme des Kontexts umgestellt hat.
+        let ctx_dark = ctx.theme() == egui::Theme::Dark;
+        if self.applied_dark != Some(dark) || ctx_dark != dark {
             self.applied_dark = Some(dark);
             apply_style(ctx, self.pal(), dark);
         }
@@ -507,21 +513,31 @@ impl eframe::App for App {
                 match self.view {
                     View::Settings => self.settings_view(ui, &ctx),
                     View::Main => {
-                        self.mode_switch(ui);
+                        // Aktionsleiste ist immer sichtbar; der Bereich darüber scrollt, wenn das
+                        // Fenster zu niedrig ist. Die Liste bekommt den freien Platz, mindestens MIN_LIST.
+                        let viewport = (ui.available_height() - ACTION_BAR_H).max(MIN_LIST);
+                        egui::ScrollArea::vertical()
+                            .id_salt("main_scroll")
+                            .max_height(viewport)
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                self.mode_switch(ui);
+                                ui.add_space(12.0);
+                                self.drop_zone(ui, hovering);
+                                ui.add_space(12.0);
+                                let list_h = (viewport - self.other_h).max(MIN_LIST);
+                                ui.allocate_ui(Vec2::new(ui.available_width(), list_h), |ui| self.file_list(ui));
+                                ui.add_space(10.0);
+                                self.controls(ui);
+                                // Höhe aller übrigen Elemente merken (wirkt ab dem nächsten Bild)
+                                let other = ui.min_rect().height() - list_h;
+                                if (other - self.other_h).abs() > 0.5 {
+                                    self.other_h = other;
+                                    ctx.request_repaint();
+                                }
+                            });
                         ui.add_space(12.0);
-                        self.drop_zone(ui, hovering);
-                        ui.add_space(12.0);
-                        // Liste bekommt, was der untere Bereich (Höhe aus dem letzten Bild) übrig lässt
-                        let list_h = (ui.available_height() - self.controls_h - 10.0).max(72.0);
-                        ui.allocate_ui(Vec2::new(ui.available_width(), list_h), |ui| self.file_list(ui));
-                        ui.add_space(10.0);
-                        let top = ui.cursor().top();
-                        self.controls(ui);
-                        let h = ui.min_rect().bottom() - top;
-                        if (h - self.controls_h).abs() > 0.5 {
-                            self.controls_h = h;
-                            ctx.request_repaint();
-                        }
+                        self.action_bar(ui);
                     }
                 }
             },
@@ -546,9 +562,12 @@ impl App {
                 Color32::WHITE,
             );
             ui.add_space(8.0);
+            // Platz für den ⚙-Knopf rechts freihalten; lange Untertitel brechen um.
+            let text_w = (ui.available_width() - 50.0).max(120.0);
             ui.vertical(|ui| {
+                ui.set_max_width(text_w);
                 ui.label(RichText::new("Doclatch").size(22.0).strong().color(pal.text));
-                ui.label(RichText::new(t.subtitle).size(13.0).color(pal.muted));
+                ui.add(egui::Label::new(RichText::new(t.subtitle).size(13.0).color(pal.muted)).wrap());
             });
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 let active = self.view == View::Settings;
@@ -891,8 +910,12 @@ impl App {
                     });
                 });
             });
+    }
 
-        ui.add_space(12.0);
+    /// Fortschritt/Abbrechen bzw. Hauptknopf – fest am unteren Rand.
+    fn action_bar(&mut self, ui: &mut egui::Ui) {
+        let (pal, t) = (self.pal(), self.t());
+        let protect = self.mode == Mode::Protect;
         ui.horizontal(|ui| {
             if let Some(pr) = &self.progress {
                 // Fortschritt + Abbrechen
@@ -948,6 +971,11 @@ impl App {
                 if r.clicked() || (enabled && ui.input(|i| i.key_pressed(egui::Key::Enter))) {
                     self.start();
                 }
+                // Grund für den gesperrten Knopf direkt sichtbar machen (links daneben, umbrechend)
+                if !effective && n > 0 {
+                    ui.add_space(8.0);
+                    ui.add(egui::Label::new(RichText::new(t.nothing_to_protect).size(12.0).color(pal.warn)).wrap());
+                }
             });
         });
     }
@@ -955,7 +983,7 @@ impl App {
     /// Passwörter und erlaubte Aktionen für den Schutz-Modus.
     fn protect_settings(&mut self, ui: &mut egui::Ui) {
         let (pal, t) = (self.pal(), self.t());
-        let label_w = 170.0;
+        let label_w = 150.0;
         let show = self.show_new_pw;
         let mut toggle = false;
         for (i, (label, hint)) in
@@ -963,7 +991,10 @@ impl App {
         {
             let row = Vec2::new(ui.available_width(), 32.0);
             ui.allocate_ui_with_layout(row, Layout::left_to_right(Align::Center), |ui| {
-                ui.add_sized([label_w, 20.0], egui::Label::new(RichText::new(label).color(pal.muted)).truncate());
+                ui.allocate_ui_with_layout(Vec2::new(label_w, 20.0), Layout::left_to_right(Align::Center), |ui| {
+                    ui.set_min_width(label_w);
+                    ui.add(egui::Label::new(RichText::new(label).color(pal.muted)).truncate());
+                });
                 let w = ui.available_width() - if i == 0 { 44.0 } else { 0.0 };
                 let text = if i == 0 { &mut self.open_pw } else { &mut self.owner_pw };
                 ui.add(
@@ -1332,8 +1363,12 @@ mod tests {
 
     /// Testumgebung: Englisch fest, Theme „Auto“, nichts wird gespeichert, kein Portal-Wächter.
     fn harness(files: Vec<PathBuf>) -> Harness<'static, App> {
-        let settings = Settings { theme: ThemePref::Auto, lang: LangPref::Fixed(Lang::En) };
-        Harness::builder().with_size([680.0, 780.0]).build_eframe(move |cc| App::build(cc, files, settings, false))
+        harness_with(files, Lang::En, ThemePref::Auto, [680.0, 780.0])
+    }
+
+    fn harness_with(files: Vec<PathBuf>, lang: Lang, theme: ThemePref, size: [f32; 2]) -> Harness<'static, App> {
+        let settings = Settings { theme, lang: LangPref::Fixed(lang) };
+        Harness::builder().with_size(size).build_eframe(move |cc| App::build(cc, files, settings, false))
     }
 
     /// Lässt die Oberfläche laufen, bis `cond` erfüllt ist (Worker läuft echt im Hintergrund).
@@ -1518,6 +1553,81 @@ mod tests {
             let i = core::inspect(&o).unwrap();
             assert_eq!(i.protection, Protection::PasswordRequired);
             assert!(!i.permissions.unwrap().intersects(ALL_PERMISSIONS));
+        }
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    /// Kleinstes erlaubtes Fenster, längere deutsche Texte: Hauptknopf muss sichtbar bleiben,
+    /// der Untertitel darf das ⚙ nicht überdecken.
+    #[test]
+    fn layout_bei_kleinem_fenster() {
+        let (dir, files) = make_pdfs("layout", 5);
+        let (w, h) = (540.0, 620.0);
+        let mut hs = harness_with(files, Lang::De, ThemePref::Dark, [w, h]);
+        wait(&mut hs, checked);
+        for (mode, label) in [
+            (Mode::Unlock, format!("🔓  {}", fill(DE.unlock_n, "n", 5))),
+            (Mode::Protect, format!("🔒  {}", fill(DE.protect_n, "n", 5))),
+        ] {
+            hs.state_mut().mode = mode;
+            hs.state_mut().open_pw = "x".into(); // Hinweiszeile im Schutz-Modus mit anzeigen
+            hs.run_steps(4);
+            let r = hs.get_by_label(&label).rect();
+            assert!(r.top() >= 0.0 && r.bottom() <= h, "{mode:?}: Knopf außerhalb des Fensters: {r:?}");
+            let gear = hs.get_by_label("⚙").rect();
+            let sub = hs.get_by_label(DE.subtitle).rect();
+            assert!(sub.right() <= gear.left(), "Untertitel überdeckt ⚙: {sub:?} / {gear:?}");
+        }
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    /// Name, Sprache, Theme, Fenstergröße, Dateien, Modus, Ansicht
+    type Shot = (&'static str, Lang, ThemePref, [f32; 2], Vec<PathBuf>, Mode, View);
+
+    /// Bildschirmfotos zur Sichtkontrolle (braucht eine Grafikkarte, daher nur auf Wunsch):
+    /// `cargo test screenshots -- --ignored` → `target/screenshots/*.png`
+    #[test]
+    #[ignore]
+    fn screenshots() {
+        let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/screenshots");
+        std::fs::create_dir_all(&out).unwrap();
+        let (dir, files) = make_pdfs("shots", 4);
+        let locked = encrypted_file(&dir, "vertraulich.pdf", 5, "geheim", "owner");
+        let mut all = files.clone();
+        all.push(locked);
+
+        let shots: [Shot; 6] = [
+            ("de_leer_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], vec![], Mode::Unlock, View::Main),
+            ("de_entsperren_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], all.clone(), Mode::Unlock, View::Main),
+            (
+                "de_schuetzen_dunkel",
+                Lang::De,
+                ThemePref::Dark,
+                [680.0, 780.0],
+                files.clone(),
+                Mode::Protect,
+                View::Main,
+            ),
+            (
+                "de_schuetzen_klein_hell",
+                Lang::De,
+                ThemePref::Light,
+                [540.0, 620.0],
+                files.clone(),
+                Mode::Protect,
+                View::Main,
+            ),
+            ("en_einstellungen_hell", Lang::En, ThemePref::Light, [680.0, 780.0], vec![], Mode::Unlock, View::Settings),
+            ("ru_entsperren_hell", Lang::Ru, ThemePref::Light, [680.0, 780.0], all.clone(), Mode::Unlock, View::Main),
+        ];
+        for (name, lang, theme, size, files, mode, view) in shots {
+            let mut h = harness_with(files, lang, theme, size);
+            wait(&mut h, checked);
+            h.state_mut().mode = mode;
+            h.state_mut().view = view;
+            h.run_steps(6);
+            let img = h.render().expect("Rendern fehlgeschlagen");
+            img.save(out.join(format!("{name}.png"))).unwrap();
         }
         std::fs::remove_dir_all(dir).ok();
     }
