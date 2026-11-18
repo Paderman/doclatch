@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Doclatch
+Comment=Remove password protection and restrictions from PDF files
+Comment[de]=Passwortschutz und Einschränkungen aus PDF-Dateien entfernen
+Comment[fr]=Supprimer la protection par mot de passe et les restrictions des fichiers PDF
+Comment[es]=Quitar la protección con contraseña y las restricciones de archivos PDF
+Exec=doclatch --gui %F
+Icon=document-decrypt
+Terminal=false
+Categories=Office;Utility;
+MimeType=application/pdf;

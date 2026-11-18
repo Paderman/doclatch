@@ -1,0 +1,69 @@
+[package]
+name = "doclatch"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Removes or adds password protection and restrictions for PDF files – modern GUI and CLI"
+readme = "README.md"
+keywords = ["pdf", "decrypt", "encrypt", "unlock", "password"]
+categories = ["command-line-utilities", "gui"]
+
+[dependencies]
+# Schlanke Auswahl: OpenGL-Backend (glow) statt wgpu, unter Linux nur X11.
+# X11 ist unter Linux nötig, weil winit 0.30 Drag & Drop nur dort unterstützt
+# (unter Wayland-Desktops läuft die App automatisch über XWayland).
+eframe = { version = "0.37", default-features = false, features = [
+    "glow",          # OpenGL-Renderer (deutlich kleiner als wgpu)
+    "x11",           # Linux-Fenster über X11/XWayland
+    "default_fonts", # eingebaute Schriften inkl. Symbolen
+    "clipboard",     # Passwort einfügen per Strg+V
+] }
+# Eingebaute Symbol-/Emoji-Schriften (🔓 📄 ✔ …) – unabhängig von Systemschriften.
+egui = { version = "0.37", default-features = false, features = ["monochrome_emoji_fonts"] }
+getrandom = "0.4"
+lopdf = { version = "0.47", default-features = false } # ohne rayon/chrono
+rfd = { version = "0.18", default-features = false, features = ["xdg-portal"] }
+sys-locale = "0.3"
+
+# Unter Windows: Konsole des Aufrufers für die CLI-Ausgabe anhängen (kein neues Crate, steckt schon im Baum).
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_System_Console"] }
+# Windows zusätzlich mit wgpu/DirectX 12: bringt den WARP-Software-Renderer mit und läuft damit
+# auch in VMs/RDP ohne GPU-Treiber (z. B. WinBoat), wo nur OpenGL 1.1 verfügbar ist.
+eframe = { version = "0.37", default-features = false, features = ["wgpu_no_default_features"] }
+wgpu = { version = "30", default-features = false, features = ["dx12"] }
+
+[features]
+default = []
+# Natives Wayland (für Systeme ohne XWayland). Achtung: dann kein Drag & Drop.
+wayland = ["eframe/wayland", "rfd/wayland"]
+# Screenreader-Unterstützung (AccessKit), zieht unter Linux D-Bus-Bibliotheken nach.
+accessibility = ["eframe/accesskit"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[dev-dependencies]
+egui_kittest = { version = "0.37", features = ["eframe"] }
+
+# Debian-Paket (cargo deb --target <triple> --no-build)
+[package.metadata.deb]
+maintainer = "The Doclatch Contributors"
+copyright = "2026, The Doclatch Contributors"
+section = "utils"
+priority = "optional"
+depends = "libc6 (>= 2.28)"
+recommends = "xdg-desktop-portal"
+extended-description = "Graphical and command-line tool that removes password protection and permission restrictions from PDF files. Runs entirely locally."
+assets = [
+    ["target/release/doclatch", "usr/bin/", "755"],
+    ["packaging/doclatch.desktop", "usr/share/applications/", "644"],
+    ["README.md", "usr/share/doc/doclatch/README.md", "644"],
+    ["README.de.md", "usr/share/doc/doclatch/README.de.md", "644"],
+    ["THIRD_PARTY_LICENSES.txt", "usr/share/doc/doclatch/THIRD_PARTY_LICENSES.txt", "644"],
+    ["LICENSE-MIT", "usr/share/doc/doclatch/LICENSE-MIT", "644"],
+    ["LICENSE-APACHE", "usr/share/doc/doclatch/LICENSE-APACHE", "644"],
+]

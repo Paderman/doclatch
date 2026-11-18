@@ -1,0 +1,126 @@
+# Baut Release-Pakete für alle Plattformen, sobald ein Tag "v*" gepusht wird
+# (z. B.  git tag v0.1.0 && git push origin v0.1.0), und legt einen Release-Entwurf an.
+#
+#   Linux   x86-64, ARM64, RISC-V   glibc ≥ 2.28   .tar.gz + .deb   (cargo-zigbuild)
+#   Windows x86-64, ARM64                          .zip             (MSVC)
+#   macOS   Universal (Intel + Apple Silicon)       .app in .zip     (lipo, ad-hoc signiert)
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: # Testlauf ohne Release (Pakete nur als Artefakte)
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu,riscv64gc-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@v2
+      - name: Werkzeuge installieren
+        run: |
+          pip install --user cargo-zigbuild   # bringt Zig als Python-Paket mit
+          cargo install --locked cargo-deb
+      - name: Bauen und packen
+        run: scripts/build-linux.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-linux
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+
+  windows:
+    name: Windows ${{ matrix.arch }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x86_64,  target: x86_64-pc-windows-msvc }
+          - { arch: arm64,   target: aarch64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Bauen
+        run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Packen
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+          $name = "doclatch-$version-windows-${{ matrix.arch }}"
+          New-Item -ItemType Directory -Force -Path "dist/$name" | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/doclatch.exe", README.md, README.de.md, LICENSE-MIT, LICENSE-APACHE, THIRD_PARTY_LICENSES.txt "dist/$name/"
+          Compress-Archive -Path "dist/$name" -DestinationPath "dist/$name.zip"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-windows-${{ matrix.arch }}
+          path: dist/*.zip
+
+  macos:
+    name: macOS Universal
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - name: Bauen (beide Architekturen)
+        run: |
+          cargo build --release --locked --target aarch64-apple-darwin
+          cargo build --release --locked --target x86_64-apple-darwin
+      - name: Universal-App packen
+        run: |
+          VERSION=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
+          APP="dist/Doclatch.app"
+          mkdir -p "$APP/Contents/MacOS"
+          lipo -create -output "$APP/Contents/MacOS/doclatch" \
+            target/aarch64-apple-darwin/release/doclatch \
+            target/x86_64-apple-darwin/release/doclatch
+          sed "s/@VERSION@/$VERSION/g" packaging/macos/Info.plist > "$APP/Contents/Info.plist"
+          mkdir -p "$APP/Contents/Resources"
+          cp README.md README.de.md LICENSE-MIT LICENSE-APACHE THIRD_PARTY_LICENSES.txt "$APP/Contents/Resources/"
+          # Ad-hoc-Signatur (ohne Apple-Entwicklerkonto; Gatekeeper warnt trotzdem beim ersten Start)
+          codesign --force --deep --sign - "$APP"
+          lipo -info "$APP/Contents/MacOS/doclatch"
+          (cd dist && ditto -c -k --keepParent "Doclatch.app" "doclatch-$VERSION-macos-universal.zip")
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-macos
+          path: dist/*.zip
+
+  release:
+    name: Release-Entwurf
+    needs: [linux, windows, macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Prüfsummen
+        run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Entwurf anlegen (wird erst nach manueller Prüfung veröffentlicht)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/* \
+            --repo "${{ github.repository }}" \
+            --draft --generate-notes --title "Doclatch ${{ github.ref_name }}"
