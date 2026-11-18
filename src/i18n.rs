@@ -189,6 +189,7 @@ strings!(
     disclaimer_title,
     disclaimer,
     dest_label,
+    show_in_folder,
 );
 
 pub static EN: Strings = Strings {
@@ -278,6 +279,7 @@ pub static EN: Strings = Strings {
     disclaimer_title: "Disclaimer",
     disclaimer: "This software is provided “as is”, without warranty of any kind. Use it at your own risk and keep backups of important files. Only process documents you are entitled to edit.",
     dest_label: "Save to",
+    show_in_folder: "Show in folder",
 };
 
 pub static DE: Strings = Strings {
@@ -367,6 +369,7 @@ pub static DE: Strings = Strings {
     disclaimer_title: "Haftungsausschluss",
     disclaimer: "Diese Software wird „wie sie ist“ bereitgestellt, ohne jegliche Gewährleistung. Die Nutzung erfolgt auf eigene Verantwortung – bitte von wichtigen Dateien Sicherungen behalten. Nur Dokumente bearbeiten, zu deren Bearbeitung du berechtigt bist.",
     dest_label: "Speichern in",
+    show_in_folder: "Im Ordner anzeigen",
 };
 
 pub static FR: Strings = Strings {
@@ -456,6 +459,7 @@ pub static FR: Strings = Strings {
     disclaimer_title: "Avertissement",
     disclaimer: "Ce logiciel est fourni « tel quel », sans aucune garantie. Vous l’utilisez à vos propres risques ; conservez des sauvegardes de vos fichiers importants. Ne traitez que des documents que vous êtes autorisé à modifier.",
     dest_label: "Enregistrer dans",
+    show_in_folder: "Afficher dans le dossier",
 };
 
 pub static ES: Strings = Strings {
@@ -545,6 +549,7 @@ pub static ES: Strings = Strings {
     disclaimer_title: "Aviso legal",
     disclaimer: "Este software se ofrece «tal cual», sin garantía de ningún tipo. Lo usas bajo tu propia responsabilidad; conserva copias de seguridad de los archivos importantes. Procesa solo documentos que tengas derecho a modificar.",
     dest_label: "Guardar en",
+    show_in_folder: "Mostrar en la carpeta",
 };
 
 pub static IT: Strings = Strings {
@@ -634,6 +639,7 @@ pub static IT: Strings = Strings {
     disclaimer_title: "Esclusione di responsabilità",
     disclaimer: "Questo software è fornito «così com’è», senza alcuna garanzia. L’uso è a tuo rischio; conserva copie di backup dei file importanti. Elabora solo documenti che hai il diritto di modificare.",
     dest_label: "Salva in",
+    show_in_folder: "Mostra nella cartella",
 };
 
 pub static PT: Strings = Strings {
@@ -723,6 +729,7 @@ pub static PT: Strings = Strings {
     disclaimer_title: "Isenção de responsabilidade",
     disclaimer: "Este software é fornecido “no estado em que se encontra”, sem garantia de qualquer tipo. O uso é por sua conta e risco; mantenha cópias de segurança dos arquivos importantes. Processe apenas documentos que você tem direito de editar.",
     dest_label: "Salvar em",
+    show_in_folder: "Mostrar na pasta",
 };
 
 pub static NL: Strings = Strings {
@@ -812,6 +819,7 @@ pub static NL: Strings = Strings {
     disclaimer_title: "Disclaimer",
     disclaimer: "Deze software wordt geleverd ‘zoals hij is’, zonder enige garantie. Gebruik is op eigen risico; bewaar back-ups van belangrijke bestanden. Verwerk alleen documenten die je mag bewerken.",
     dest_label: "Opslaan in",
+    show_in_folder: "In map weergeven",
 };
 
 pub static PL: Strings = Strings {
@@ -901,6 +909,7 @@ pub static PL: Strings = Strings {
     disclaimer_title: "Zastrzeżenie",
     disclaimer: "To oprogramowanie jest udostępniane „tak jak jest”, bez jakiejkolwiek gwarancji. Korzystasz z niego na własną odpowiedzialność – zachowaj kopie zapasowe ważnych plików. Przetwarzaj tylko dokumenty, do których edycji masz prawo.",
     dest_label: "Zapisz w",
+    show_in_folder: "Pokaż w folderze",
 };
 
 pub static TR: Strings = Strings {
@@ -990,6 +999,7 @@ pub static TR: Strings = Strings {
     disclaimer_title: "Sorumluluk reddi",
     disclaimer: "Bu yazılım hiçbir garanti verilmeksizin “olduğu gibi” sunulmaktadır. Kullanım sorumluluğu size aittir; önemli dosyaların yedeklerini saklayın. Yalnızca düzenleme hakkına sahip olduğunuz belgeleri işleyin.",
     dest_label: "Kayıt yeri",
+    show_in_folder: "Klasörde göster",
 };
 
 pub static RU: Strings = Strings {
@@ -1079,6 +1089,7 @@ pub static RU: Strings = Strings {
     disclaimer_title: "Отказ от ответственности",
     disclaimer: "Программа предоставляется «как есть», без каких-либо гарантий. Вы используете её на свой риск – храните резервные копии важных файлов. Обрабатывайте только документы, которые вы вправе изменять.",
     dest_label: "Сохранить в",
+    show_in_folder: "Показать в папке",
 };
 
 pub static UK: Strings = Strings {
@@ -1168,6 +1179,7 @@ pub static UK: Strings = Strings {
     disclaimer_title: "Відмова від відповідальності",
     disclaimer: "Програма надається «як є», без жодних гарантій. Ви використовуєте її на власний ризик – зберігайте резервні копії важливих файлів. Обробляйте лише документи, які ви маєте право змінювати.",
     dest_label: "Зберегти в",
+    show_in_folder: "Показати в теці",
 };
 
 #[cfg(test)]

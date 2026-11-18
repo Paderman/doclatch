@@ -728,6 +728,16 @@ impl App {
                                             remove = Some(i);
                                         }
                                     }
+                                    // Datei im Dateimanager zeigen und markieren (Ergebnis, sonst Original)
+                                    let folder =
+                                        egui::Button::new(RichText::new("📂").size(15.0).color(pal.muted)).frame(false);
+                                    if ui.add(folder).on_hover_text(t.show_in_folder).clicked() {
+                                        let done = match &e.status {
+                                            Status::Done(out, _) => Some(out),
+                                            _ => None,
+                                        };
+                                        crate::reveal::reveal(&crate::reveal::target_for(&e.path, done));
+                                    }
                                     let b = badge(ui, pal, t, &e.status);
                                     // Berechtigungen als Info beim Überfahren
                                     if let Status::Ready(

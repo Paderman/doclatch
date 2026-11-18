@@ -4,6 +4,7 @@
 mod core;
 mod gui;
 mod i18n;
+mod reveal;
 mod settings;
 
 use std::path::PathBuf;
