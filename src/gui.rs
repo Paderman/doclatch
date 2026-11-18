@@ -892,20 +892,43 @@ impl App {
                     ui.checkbox(&mut self.overwrite, RichText::new(t.overwrite).color(pal.text));
                     ui.add_space(12.0);
                     ui.add_enabled_ui(!self.overwrite, |ui| {
-                        let label = match &self.out_dir {
-                            Some(d) => format!("📁 {}", d.display()),
+                        let label = ui.label(RichText::new(format!("{}:", t.dest_label)).color(pal.muted));
+                        let current = match &self.out_dir {
                             None => format!("📁 {}", t.save_next_to),
+                            Some(d) => {
+                                format!("📁 {}", d.file_name().map_or(d.to_string_lossy(), |n| n.to_string_lossy()))
+                            }
                         };
-                        let b = egui::Button::new(RichText::new(label).size(13.0))
-                            .fill(pal.surface_hi)
-                            .corner_radius(CornerRadius::same(8));
-                        if ui.add(b).on_hover_text(t.choose_folder).clicked()
-                            && let Some(d) = rfd::FileDialog::new().pick_folder()
-                        {
-                            self.out_dir = Some(d);
+                        let mut pick = false;
+                        let combo = egui::ComboBox::from_id_salt("destination")
+                            .selected_text(current)
+                            .width(ui.available_width().clamp(120.0, 260.0))
+                            .show_ui(ui, |ui| {
+                                if ui.selectable_label(self.out_dir.is_none(), t.save_next_to).clicked() {
+                                    self.out_dir = None;
+                                }
+                                if let Some(d) = &self.out_dir {
+                                    let _ = ui.selectable_label(true, d.display().to_string());
+                                }
+                                pick = ui.selectable_label(false, t.choose_folder).clicked();
+                            });
+                        let combo_resp = combo.response.labelled_by(label.id);
+                        if let Some(d) = &self.out_dir {
+                            combo_resp.on_hover_text(d.display().to_string());
                         }
-                        if self.out_dir.is_some() && ui.small_button("×").on_hover_text(t.reset).clicked() {
-                            self.out_dir = None;
+                        if pick {
+                            // Im gewählten Ordner bzw. im Ordner der ersten Datei starten, nicht im Benutzerordner
+                            let start = self
+                                .out_dir
+                                .clone()
+                                .or_else(|| self.entries.first().and_then(|e| e.path.parent().map(Path::to_path_buf)));
+                            let mut dlg = rfd::FileDialog::new();
+                            if let Some(dir) = start {
+                                dlg = dlg.set_directory(dir);
+                            }
+                            if let Some(d) = dlg.pick_folder() {
+                                self.out_dir = Some(d);
+                            }
                         }
                     });
                 });

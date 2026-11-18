@@ -136,7 +136,6 @@ strings!(
     overwrite,
     save_next_to,
     choose_folder,
-    reset,
     clear_done,
     unlock,
     unlock_n,
@@ -189,6 +188,7 @@ strings!(
     keep_password,
     disclaimer_title,
     disclaimer,
+    dest_label,
 );
 
 pub static EN: Strings = Strings {
@@ -223,9 +223,8 @@ pub static EN: Strings = Strings {
     pw_hint: "Password needed to open the PDF",
     show_password: "Show password",
     overwrite: "Overwrite original",
-    save_next_to: "Save next to the original",
-    choose_folder: "Choose output folder",
-    reset: "Reset",
+    save_next_to: "Next to the original",
+    choose_folder: "Other folder…",
     clear_done: "Remove finished",
     unlock: "Unlock",
     unlock_n: "Unlock ({n})",
@@ -278,6 +277,7 @@ pub static EN: Strings = Strings {
     keep_password: "Keep the password safe – without it the file cannot be opened.",
     disclaimer_title: "Disclaimer",
     disclaimer: "This software is provided “as is”, without warranty of any kind. Use it at your own risk and keep backups of important files. Only process documents you are entitled to edit.",
+    dest_label: "Save to",
 };
 
 pub static DE: Strings = Strings {
@@ -312,9 +312,8 @@ pub static DE: Strings = Strings {
     pw_hint: "Zum Öffnen der PDF benötigtes Passwort",
     show_password: "Passwort anzeigen",
     overwrite: "Original überschreiben",
-    save_next_to: "Neben der Originaldatei speichern",
-    choose_folder: "Zielordner wählen",
-    reset: "Zurücksetzen",
+    save_next_to: "Neben dem Original",
+    choose_folder: "Anderer Ordner …",
     clear_done: "Erledigte entfernen",
     unlock: "Entsperren",
     unlock_n: "Entsperren ({n})",
@@ -367,6 +366,7 @@ pub static DE: Strings = Strings {
     keep_password: "Passwort gut aufbewahren – ohne es lässt sich die Datei nicht mehr öffnen.",
     disclaimer_title: "Haftungsausschluss",
     disclaimer: "Diese Software wird „wie sie ist“ bereitgestellt, ohne jegliche Gewährleistung. Die Nutzung erfolgt auf eigene Verantwortung – bitte von wichtigen Dateien Sicherungen behalten. Nur Dokumente bearbeiten, zu deren Bearbeitung du berechtigt bist.",
+    dest_label: "Speichern in",
 };
 
 pub static FR: Strings = Strings {
@@ -401,9 +401,8 @@ pub static FR: Strings = Strings {
     pw_hint: "Mot de passe nécessaire pour ouvrir le PDF",
     show_password: "Afficher le mot de passe",
     overwrite: "Écraser l’original",
-    save_next_to: "Enregistrer à côté de l’original",
-    choose_folder: "Choisir le dossier de destination",
-    reset: "Réinitialiser",
+    save_next_to: "À côté de l’original",
+    choose_folder: "Autre dossier…",
     clear_done: "Retirer les terminés",
     unlock: "Déverrouiller",
     unlock_n: "Déverrouiller ({n})",
@@ -456,6 +455,7 @@ pub static FR: Strings = Strings {
     keep_password: "Conservez le mot de passe en lieu sûr – sans lui, le fichier ne peut plus être ouvert.",
     disclaimer_title: "Avertissement",
     disclaimer: "Ce logiciel est fourni « tel quel », sans aucune garantie. Vous l’utilisez à vos propres risques ; conservez des sauvegardes de vos fichiers importants. Ne traitez que des documents que vous êtes autorisé à modifier.",
+    dest_label: "Enregistrer dans",
 };
 
 pub static ES: Strings = Strings {
@@ -490,9 +490,8 @@ pub static ES: Strings = Strings {
     pw_hint: "Contraseña necesaria para abrir el PDF",
     show_password: "Mostrar contraseña",
     overwrite: "Sobrescribir el original",
-    save_next_to: "Guardar junto al original",
-    choose_folder: "Elegir carpeta de destino",
-    reset: "Restablecer",
+    save_next_to: "Junto al original",
+    choose_folder: "Otra carpeta…",
     clear_done: "Quitar los terminados",
     unlock: "Desbloquear",
     unlock_n: "Desbloquear ({n})",
@@ -545,6 +544,7 @@ pub static ES: Strings = Strings {
     keep_password: "Guarda bien la contraseña: sin ella no se podrá abrir el archivo.",
     disclaimer_title: "Aviso legal",
     disclaimer: "Este software se ofrece «tal cual», sin garantía de ningún tipo. Lo usas bajo tu propia responsabilidad; conserva copias de seguridad de los archivos importantes. Procesa solo documentos que tengas derecho a modificar.",
+    dest_label: "Guardar en",
 };
 
 pub static IT: Strings = Strings {
@@ -579,9 +579,8 @@ pub static IT: Strings = Strings {
     pw_hint: "Password necessaria per aprire il PDF",
     show_password: "Mostra password",
     overwrite: "Sovrascrivi l’originale",
-    save_next_to: "Salva accanto all’originale",
-    choose_folder: "Scegli cartella di destinazione",
-    reset: "Ripristina",
+    save_next_to: "Accanto all’originale",
+    choose_folder: "Altra cartella…",
     clear_done: "Rimuovi completati",
     unlock: "Sblocca",
     unlock_n: "Sblocca ({n})",
@@ -634,6 +633,7 @@ pub static IT: Strings = Strings {
     keep_password: "Conserva la password al sicuro: senza di essa il file non si potrà più aprire.",
     disclaimer_title: "Esclusione di responsabilità",
     disclaimer: "Questo software è fornito «così com’è», senza alcuna garanzia. L’uso è a tuo rischio; conserva copie di backup dei file importanti. Elabora solo documenti che hai il diritto di modificare.",
+    dest_label: "Salva in",
 };
 
 pub static PT: Strings = Strings {
@@ -668,9 +668,8 @@ pub static PT: Strings = Strings {
     pw_hint: "Senha necessária para abrir o PDF",
     show_password: "Mostrar senha",
     overwrite: "Substituir o original",
-    save_next_to: "Salvar ao lado do original",
-    choose_folder: "Escolher pasta de destino",
-    reset: "Redefinir",
+    save_next_to: "Ao lado do original",
+    choose_folder: "Outra pasta…",
     clear_done: "Remover concluídos",
     unlock: "Desbloquear",
     unlock_n: "Desbloquear ({n})",
@@ -723,6 +722,7 @@ pub static PT: Strings = Strings {
     keep_password: "Guarde bem a senha – sem ela o arquivo não poderá ser aberto.",
     disclaimer_title: "Isenção de responsabilidade",
     disclaimer: "Este software é fornecido “no estado em que se encontra”, sem garantia de qualquer tipo. O uso é por sua conta e risco; mantenha cópias de segurança dos arquivos importantes. Processe apenas documentos que você tem direito de editar.",
+    dest_label: "Salvar em",
 };
 
 pub static NL: Strings = Strings {
@@ -757,9 +757,8 @@ pub static NL: Strings = Strings {
     pw_hint: "Wachtwoord nodig om de pdf te openen",
     show_password: "Wachtwoord tonen",
     overwrite: "Origineel overschrijven",
-    save_next_to: "Naast het origineel opslaan",
-    choose_folder: "Doelmap kiezen",
-    reset: "Herstellen",
+    save_next_to: "Naast het origineel",
+    choose_folder: "Andere map…",
     clear_done: "Voltooide verwijderen",
     unlock: "Ontgrendelen",
     unlock_n: "Ontgrendelen ({n})",
@@ -812,6 +811,7 @@ pub static NL: Strings = Strings {
     keep_password: "Bewaar het wachtwoord goed – zonder kan het bestand niet meer worden geopend.",
     disclaimer_title: "Disclaimer",
     disclaimer: "Deze software wordt geleverd ‘zoals hij is’, zonder enige garantie. Gebruik is op eigen risico; bewaar back-ups van belangrijke bestanden. Verwerk alleen documenten die je mag bewerken.",
+    dest_label: "Opslaan in",
 };
 
 pub static PL: Strings = Strings {
@@ -846,9 +846,8 @@ pub static PL: Strings = Strings {
     pw_hint: "Hasło potrzebne do otwarcia pliku PDF",
     show_password: "Pokaż hasło",
     overwrite: "Nadpisz oryginał",
-    save_next_to: "Zapisz obok oryginału",
-    choose_folder: "Wybierz folder docelowy",
-    reset: "Resetuj",
+    save_next_to: "Obok oryginału",
+    choose_folder: "Inny folder…",
     clear_done: "Usuń ukończone",
     unlock: "Odblokuj",
     unlock_n: "Odblokuj ({n})",
@@ -901,6 +900,7 @@ pub static PL: Strings = Strings {
     keep_password: "Przechowuj hasło bezpiecznie – bez niego pliku nie da się otworzyć.",
     disclaimer_title: "Zastrzeżenie",
     disclaimer: "To oprogramowanie jest udostępniane „tak jak jest”, bez jakiejkolwiek gwarancji. Korzystasz z niego na własną odpowiedzialność – zachowaj kopie zapasowe ważnych plików. Przetwarzaj tylko dokumenty, do których edycji masz prawo.",
+    dest_label: "Zapisz w",
 };
 
 pub static TR: Strings = Strings {
@@ -935,9 +935,8 @@ pub static TR: Strings = Strings {
     pw_hint: "PDF'yi açmak için gereken parola",
     show_password: "Parolayı göster",
     overwrite: "Orijinalin üzerine yaz",
-    save_next_to: "Orijinalin yanına kaydet",
-    choose_folder: "Hedef klasörü seç",
-    reset: "Sıfırla",
+    save_next_to: "Orijinalin yanı",
+    choose_folder: "Başka klasör…",
     clear_done: "Tamamlananları kaldır",
     unlock: "Kilidi aç",
     unlock_n: "Kilidi aç ({n})",
@@ -990,6 +989,7 @@ pub static TR: Strings = Strings {
     keep_password: "Parolayı güvenle saklayın – parola olmadan dosya açılamaz.",
     disclaimer_title: "Sorumluluk reddi",
     disclaimer: "Bu yazılım hiçbir garanti verilmeksizin “olduğu gibi” sunulmaktadır. Kullanım sorumluluğu size aittir; önemli dosyaların yedeklerini saklayın. Yalnızca düzenleme hakkına sahip olduğunuz belgeleri işleyin.",
+    dest_label: "Kayıt yeri",
 };
 
 pub static RU: Strings = Strings {
@@ -1024,9 +1024,8 @@ pub static RU: Strings = Strings {
     pw_hint: "Пароль для открытия PDF",
     show_password: "Показать пароль",
     overwrite: "Перезаписать оригинал",
-    save_next_to: "Сохранить рядом с оригиналом",
-    choose_folder: "Выбрать папку назначения",
-    reset: "Сбросить",
+    save_next_to: "Рядом с оригиналом",
+    choose_folder: "Другая папка…",
     clear_done: "Убрать готовые",
     unlock: "Разблокировать",
     unlock_n: "Разблокировать ({n})",
@@ -1079,6 +1078,7 @@ pub static RU: Strings = Strings {
     keep_password: "Храните пароль надёжно – без него файл нельзя будет открыть.",
     disclaimer_title: "Отказ от ответственности",
     disclaimer: "Программа предоставляется «как есть», без каких-либо гарантий. Вы используете её на свой риск – храните резервные копии важных файлов. Обрабатывайте только документы, которые вы вправе изменять.",
+    dest_label: "Сохранить в",
 };
 
 pub static UK: Strings = Strings {
@@ -1113,9 +1113,8 @@ pub static UK: Strings = Strings {
     pw_hint: "Пароль для відкриття PDF",
     show_password: "Показати пароль",
     overwrite: "Перезаписати оригінал",
-    save_next_to: "Зберегти поруч з оригіналом",
-    choose_folder: "Вибрати теку призначення",
-    reset: "Скинути",
+    save_next_to: "Поруч з оригіналом",
+    choose_folder: "Інша тека…",
     clear_done: "Прибрати готові",
     unlock: "Розблокувати",
     unlock_n: "Розблокувати ({n})",
@@ -1168,6 +1167,7 @@ pub static UK: Strings = Strings {
     keep_password: "Зберігайте пароль надійно – без нього файл не вдасться відкрити.",
     disclaimer_title: "Відмова від відповідальності",
     disclaimer: "Програма надається «як є», без жодних гарантій. Ви використовуєте її на власний ризик – зберігайте резервні копії важливих файлів. Обробляйте лише документи, які ви маєте право змінювати.",
+    dest_label: "Зберегти в",
 };
 
 #[cfg(test)]
