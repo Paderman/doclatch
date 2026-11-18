@@ -127,6 +127,8 @@ struct Entry {
     status: Status,
     protection: Option<Protection>,
     permissions: Option<Permissions>,
+    /// Digital signiert – Signatur wird beim Bearbeiten ungültig
+    signed: bool,
 }
 
 /// Aufträge an den einen Hintergrund-Worker – alles läuft strikt nacheinander.
@@ -145,10 +147,13 @@ enum Job {
 }
 
 enum Msg {
-    Inspected(PathBuf, Status, Option<Permissions>),
+    /// Pfad, Status, Berechtigungen, digital signiert
+    Inspected(PathBuf, Status, Option<Permissions>, bool),
     Started(PathBuf),
     Unlocked(PathBuf, Status),
-    UnlockFinished { cancelled: Vec<PathBuf> },
+    UnlockFinished {
+        cancelled: Vec<PathBuf>,
+    },
 }
 
 struct Progress {
@@ -310,7 +315,13 @@ impl App {
     fn commit_files(&mut self, new: Vec<PathBuf>) {
         for p in &new {
             self.index.insert(p.clone(), self.entries.len());
-            self.entries.push(Entry { path: p.clone(), status: Status::Checking, protection: None, permissions: None });
+            self.entries.push(Entry {
+                path: p.clone(),
+                status: Status::Checking,
+                protection: None,
+                permissions: None,
+                signed: false,
+            });
         }
         let _ = self.jobs.send(Job::Inspect(new.into_iter().map(|p| (p, false)).collect()));
     }
@@ -362,12 +373,13 @@ impl App {
     fn poll(&mut self) {
         while let Ok(msg) = self.rx.try_recv() {
             match msg {
-                Msg::Inspected(p, st, perms) => {
+                Msg::Inspected(p, st, perms, signed) => {
                     if let Some(e) = self.entry_mut(&p) {
                         if let Status::Ready(pr) = st {
                             e.protection = Some(pr);
                         }
                         e.permissions = perms;
+                        e.signed = signed;
                         e.status = st;
                     }
                 }
@@ -442,11 +454,11 @@ fn worker(jobs: Receiver<Job>, tx: Sender<Msg>, ctx: egui::Context) {
                 for (p, force) in files {
                     let size = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
                     let msg = if size > LARGE_FILE && !force {
-                        Msg::Inspected(p, Status::Large(size), None)
+                        Msg::Inspected(p, Status::Large(size), None, false)
                     } else {
                         match core::inspect(&p) {
-                            Ok(i) => Msg::Inspected(p, Status::Ready(i.protection), i.permissions),
-                            Err(e) => Msg::Inspected(p, Status::Failed(Fail::from_unlock(e)), None),
+                            Ok(i) => Msg::Inspected(p, Status::Ready(i.protection), i.permissions, i.signed),
+                            Err(e) => Msg::Inspected(p, Status::Failed(Fail::from_unlock(e)), None, false),
                         }
                     };
                     send(msg);
@@ -776,11 +788,15 @@ impl App {
                                                 Status::Done(out, _) => fill(t.saved_to, "path", out.display()),
                                                 Status::Failed(f) => f.text(t),
                                                 Status::Large(_) => t.large_note.to_string(),
+                                                // Warnung statt Ordnerpfad, solange die Signatur noch gültig ist
+                                                _ if e.signed => t.signed_note.to_string(),
                                                 _ => parent_display(&e.path),
                                             };
                                             let col = match e.status {
                                                 Status::Failed(_) => pal.error,
                                                 Status::Large(_) => pal.warn,
+                                                Status::Done(..) => pal.muted,
+                                                _ if e.signed => pal.warn,
                                                 _ => pal.muted,
                                             };
                                             ui.add(
@@ -1374,7 +1390,7 @@ pub fn run(initial: Vec<PathBuf>) -> eframe::Result {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::tests::{encrypted_file, tmpdir};
+    use crate::core::tests::{encrypted_file, signed_sample, tmpdir};
     use crate::i18n::{DE, EN};
     use egui_kittest::Harness;
     use egui_kittest::kittest::Queryable;
@@ -1626,7 +1642,10 @@ mod tests {
         std::fs::create_dir_all(&out).unwrap();
         let (dir, files) = make_pdfs("shots", 4);
         let locked = encrypted_file(&dir, "vertraulich.pdf", 5, "geheim", "owner");
+        let signed = dir.join("unterschrieben.pdf");
+        signed_sample().save(&signed).unwrap();
         let mut all = files.clone();
+        all.insert(0, signed);
         all.push(locked);
 
         let shots: [Shot; 6] = [
@@ -1662,6 +1681,19 @@ mod tests {
             let img = h.render().expect("Rendern fehlgeschlagen");
             img.save(out.join(format!("{name}.png"))).unwrap();
         }
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn signatur_hinweis() {
+        let dir = tmpdir("signed-gui");
+        let p = dir.join("unterschrieben.pdf");
+        signed_sample().save(&p).unwrap();
+        let mut h = harness(vec![p]);
+        wait(&mut h, checked);
+        h.run_steps(2);
+        assert!(h.state().entries[0].signed);
+        h.get_by_label(EN.signed_note);
         std::fs::remove_dir_all(dir).ok();
     }
 }

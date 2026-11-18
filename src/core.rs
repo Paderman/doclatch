@@ -77,12 +77,17 @@ pub struct Inspection {
     pub protection: Protection,
     /// Gesetzte Rechte (nur bei verschlüsselten Dateien und wenn lesbar).
     pub permissions: Option<Permissions>,
+    /// Enthält digitale Signaturen – diese werden beim Entsperren/Schützen ungültig.
+    pub signed: bool,
 }
 
 /// Ermittelt Schutzstatus und Berechtigungen einer Datei.
 pub fn inspect(path: &Path) -> Result<Inspection, UnlockError> {
     let bytes = std::fs::read(path)?;
     let doc = load(&bytes, None)?;
+    // Ohne Passwort ist die Struktur verschlüsselter Dateien nicht lesbar; das Signatur-Merkmal
+    // `/ByteRange` steht aber immer unverschlüsselt in der Datei.
+    let signed = is_signed(&doc) || (doc.is_encrypted() && bytes.windows(10).any(|w| w == b"/ByteRange"));
     Ok(if doc.is_encrypted() {
         // lopdf konnte mit leerem Benutzerpasswort nicht entschlüsseln.
         // Der /P-Eintrag des Encrypt-Wörterbuchs ist auch ohne Passwort lesbar.
@@ -92,12 +97,46 @@ pub fn inspect(path: &Path) -> Result<Inspection, UnlockError> {
             .and_then(|d| d.get(b"P").ok())
             .and_then(|p| p.as_i64().ok())
             .map(|p| Permissions::from_bits_truncate(u64::from(p as i32 as u32)));
-        Inspection { protection: Protection::PasswordRequired, permissions }
+        Inspection { protection: Protection::PasswordRequired, permissions, signed }
     } else if let Some(state) = &doc.encryption_state {
-        Inspection { protection: Protection::RestrictionsOnly, permissions: Some(state.permissions()) }
+        Inspection { protection: Protection::RestrictionsOnly, permissions: Some(state.permissions()), signed }
     } else {
-        Inspection { protection: Protection::None, permissions: None }
+        Inspection { protection: Protection::None, permissions: None, signed }
     })
+}
+
+/// Sucht im Formular-Wörterbuch nach unterschriebenen Signaturfeldern (`/FT /Sig` mit `/V`).
+/// Namen und Verweise sind nie verschlüsselt – das klappt also auch ohne Passwort.
+fn is_signed(doc: &Document) -> bool {
+    use lopdf::Object;
+    let deref = |o: &Object| doc.dereference(o).ok().map(|(_, o)| o.clone());
+    let Some(form) = doc.catalog().ok().and_then(|c| c.get(b"AcroForm").ok()).and_then(deref) else {
+        return false;
+    };
+    let Ok(form) = form.as_dict() else { return false };
+    let mut stack: Vec<Object> =
+        form.get(b"Fields").ok().and_then(deref).and_then(|f| f.as_array().ok().cloned()).unwrap_or_default();
+    let mut seen = std::collections::HashSet::new();
+    while let Some(item) = stack.pop() {
+        if let Object::Reference(id) = item
+            && !seen.insert(id)
+        {
+            continue; // Schutz vor Zyklen in kaputten Dateien
+        }
+        if seen.len() > 10_000 {
+            break;
+        }
+        let Some(obj) = deref(&item) else { continue };
+        let Ok(field) = obj.as_dict() else { continue };
+        let is_sig = field.get(b"FT").ok().and_then(|f| f.as_name().ok()) == Some(b"Sig".as_slice());
+        if is_sig && field.has(b"V") {
+            return true;
+        }
+        if let Some(kids) = field.get(b"Kids").ok().and_then(deref).and_then(|k| k.as_array().ok().cloned()) {
+            stack.extend(kids);
+        }
+    }
+    false
 }
 
 /// Standard-Zielpfad: `name_unlocked.pdf` im selben Ordner (oder in `out_dir`).
@@ -395,7 +434,10 @@ pub(crate) mod tests {
         }
         let plain = dir.join("plain.pdf");
         sample().save(&plain).unwrap();
-        assert_eq!(inspect(&plain).unwrap(), Inspection { protection: Protection::None, permissions: None });
+        assert_eq!(
+            inspect(&plain).unwrap(),
+            Inspection { protection: Protection::None, permissions: None, signed: false }
+        );
         std::fs::remove_dir_all(dir).ok();
     }
 
@@ -448,6 +490,43 @@ pub(crate) mod tests {
             permissions: ALL_PERMISSIONS,
         };
         assert!(!none.is_effective());
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    /// Dokument mit einem unterschriebenen Signaturfeld (Signaturinhalt ist hier nur ein Platzhalter).
+    pub(crate) fn signed_sample() -> Document {
+        let mut doc = sample();
+        let sig = doc.add_object(dictionary! {
+            "Type" => "Sig", "Filter" => "Adobe.PPKLite", "SubFilter" => "adbe.pkcs7.detached",
+            "Contents" => Object::string_literal(vec![0u8; 16]),
+            "ByteRange" => vec![0.into(), 10.into(), 20.into(), 30.into()],
+        });
+        let field =
+            doc.add_object(dictionary! { "FT" => "Sig", "T" => Object::string_literal("Signature1"), "V" => sig });
+        let form = doc.add_object(dictionary! { "Fields" => vec![field.into()], "SigFlags" => 3 });
+        let root = doc.trailer.get(b"Root").unwrap().as_reference().unwrap();
+        doc.get_object_mut(root).unwrap().as_dict_mut().unwrap().set("AcroForm", form);
+        doc
+    }
+
+    #[test]
+    fn signatur_wird_erkannt() {
+        let dir = tmpdir("signed");
+        let p = dir.join("signed.pdf");
+        signed_sample().save(&p).unwrap();
+        assert!(inspect(&p).unwrap().signed);
+        // auch bei verschlüsselter Datei ohne Passwort
+        let opts =
+            ProtectOptions { open_password: "pw".into(), owner_password: String::new(), permissions: ALL_PERMISSIONS };
+        let locked = dir.join("locked.pdf");
+        protect(&p, &locked, &opts, None).unwrap();
+        let i = inspect(&locked).unwrap();
+        assert_eq!(i.protection, Protection::PasswordRequired);
+        assert!(i.signed);
+        // unsignierte Datei
+        let plain = dir.join("plain.pdf");
+        sample().save(&plain).unwrap();
+        assert!(!inspect(&plain).unwrap().signed);
         std::fs::remove_dir_all(dir).ok();
     }
 }

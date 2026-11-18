@@ -190,6 +190,7 @@ strings!(
     disclaimer,
     dest_label,
     show_in_folder,
+    signed_note,
 );
 
 pub static EN: Strings = Strings {
@@ -280,6 +281,7 @@ pub static EN: Strings = Strings {
     disclaimer: "This software is provided “as is”, without warranty of any kind. Use it at your own risk and keep backups of important files. Only process documents you are entitled to edit.",
     dest_label: "Save to",
     show_in_folder: "Show in folder",
+    signed_note: "Digitally signed – the signature becomes invalid when the file is changed",
 };
 
 pub static DE: Strings = Strings {
@@ -370,6 +372,7 @@ pub static DE: Strings = Strings {
     disclaimer: "Diese Software wird „wie sie ist“ bereitgestellt, ohne jegliche Gewährleistung. Die Nutzung erfolgt auf eigene Verantwortung – bitte von wichtigen Dateien Sicherungen behalten. Nur Dokumente bearbeiten, zu deren Bearbeitung du berechtigt bist.",
     dest_label: "Speichern in",
     show_in_folder: "Im Ordner anzeigen",
+    signed_note: "Digital signiert – die Signatur wird beim Bearbeiten ungültig",
 };
 
 pub static FR: Strings = Strings {
@@ -460,6 +463,7 @@ pub static FR: Strings = Strings {
     disclaimer: "Ce logiciel est fourni « tel quel », sans aucune garantie. Vous l’utilisez à vos propres risques ; conservez des sauvegardes de vos fichiers importants. Ne traitez que des documents que vous êtes autorisé à modifier.",
     dest_label: "Enregistrer dans",
     show_in_folder: "Afficher dans le dossier",
+    signed_note: "Signé numériquement – la signature devient invalide si le fichier est modifié",
 };
 
 pub static ES: Strings = Strings {
@@ -550,6 +554,7 @@ pub static ES: Strings = Strings {
     disclaimer: "Este software se ofrece «tal cual», sin garantía de ningún tipo. Lo usas bajo tu propia responsabilidad; conserva copias de seguridad de los archivos importantes. Procesa solo documentos que tengas derecho a modificar.",
     dest_label: "Guardar en",
     show_in_folder: "Mostrar en la carpeta",
+    signed_note: "Firmado digitalmente: la firma deja de ser válida si se modifica el archivo",
 };
 
 pub static IT: Strings = Strings {
@@ -640,6 +645,7 @@ pub static IT: Strings = Strings {
     disclaimer: "Questo software è fornito «così com’è», senza alcuna garanzia. L’uso è a tuo rischio; conserva copie di backup dei file importanti. Elabora solo documenti che hai il diritto di modificare.",
     dest_label: "Salva in",
     show_in_folder: "Mostra nella cartella",
+    signed_note: "Firmato digitalmente – la firma non sarà più valida se il file viene modificato",
 };
 
 pub static PT: Strings = Strings {
@@ -730,6 +736,7 @@ pub static PT: Strings = Strings {
     disclaimer: "Este software é fornecido “no estado em que se encontra”, sem garantia de qualquer tipo. O uso é por sua conta e risco; mantenha cópias de segurança dos arquivos importantes. Processe apenas documentos que você tem direito de editar.",
     dest_label: "Salvar em",
     show_in_folder: "Mostrar na pasta",
+    signed_note: "Assinado digitalmente – a assinatura deixa de ser válida se o arquivo for alterado",
 };
 
 pub static NL: Strings = Strings {
@@ -820,6 +827,7 @@ pub static NL: Strings = Strings {
     disclaimer: "Deze software wordt geleverd ‘zoals hij is’, zonder enige garantie. Gebruik is op eigen risico; bewaar back-ups van belangrijke bestanden. Verwerk alleen documenten die je mag bewerken.",
     dest_label: "Opslaan in",
     show_in_folder: "In map weergeven",
+    signed_note: "Digitaal ondertekend – de handtekening wordt ongeldig als het bestand wordt gewijzigd",
 };
 
 pub static PL: Strings = Strings {
@@ -910,6 +918,7 @@ pub static PL: Strings = Strings {
     disclaimer: "To oprogramowanie jest udostępniane „tak jak jest”, bez jakiejkolwiek gwarancji. Korzystasz z niego na własną odpowiedzialność – zachowaj kopie zapasowe ważnych plików. Przetwarzaj tylko dokumenty, do których edycji masz prawo.",
     dest_label: "Zapisz w",
     show_in_folder: "Pokaż w folderze",
+    signed_note: "Podpisany cyfrowo – po zmianie pliku podpis stanie się nieważny",
 };
 
 pub static TR: Strings = Strings {
@@ -1000,6 +1009,7 @@ pub static TR: Strings = Strings {
     disclaimer: "Bu yazılım hiçbir garanti verilmeksizin “olduğu gibi” sunulmaktadır. Kullanım sorumluluğu size aittir; önemli dosyaların yedeklerini saklayın. Yalnızca düzenleme hakkına sahip olduğunuz belgeleri işleyin.",
     dest_label: "Kayıt yeri",
     show_in_folder: "Klasörde göster",
+    signed_note: "Dijital olarak imzalı – dosya değiştirilirse imza geçersiz olur",
 };
 
 pub static RU: Strings = Strings {
@@ -1090,6 +1100,7 @@ pub static RU: Strings = Strings {
     disclaimer: "Программа предоставляется «как есть», без каких-либо гарантий. Вы используете её на свой риск – храните резервные копии важных файлов. Обрабатывайте только документы, которые вы вправе изменять.",
     dest_label: "Сохранить в",
     show_in_folder: "Показать в папке",
+    signed_note: "Подписан цифровой подписью – при изменении файла подпись станет недействительной",
 };
 
 pub static UK: Strings = Strings {
@@ -1180,6 +1191,7 @@ pub static UK: Strings = Strings {
     disclaimer: "Програма надається «як є», без жодних гарантій. Ви використовуєте її на власний ризик – зберігайте резервні копії важливих файлів. Обробляйте лише документи, які ви маєте право змінювати.",
     dest_label: "Зберегти в",
     show_in_folder: "Показати в теці",
+    signed_note: "Підписано цифровим підписом – після змінення файлу підпис стане недійсним",
 };
 
 #[cfg(test)]

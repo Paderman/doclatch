@@ -20,6 +20,8 @@ with AI assistance; corrections by native speakers are welcome (`src/i18n.rs`).
 **GUI:** start `doclatch`, drop PDFs into the window or click the drop area, then click “Unlock”.
 The password field only appears when a file actually needs an open password.
 Hover over the “Restrictions” or “Password” badge to see the individual permissions.
+Digitally signed PDFs are marked: unlocking or protecting changes the file, which invalidates the signature.
+The 📂 button shows the file (or its result) selected in the file manager.
 Result: `name_unlocked.pdf` next to the original, in a chosen folder, or (optionally) replacing the original.
 
 **Protect** (switch “🔒 Protect”): choose an optional open password, an optional permissions password

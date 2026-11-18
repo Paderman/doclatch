@@ -182,6 +182,9 @@ fn cli(args: Vec<String>) -> ExitCode {
                 None => default_target(input, None),
             }
         };
+        if core::inspect(input).is_ok_and(|i| i.signed) {
+            eprintln!("! {}: digitally signed – the signature will no longer be valid", input.display());
+        }
         let result = if protect {
             core::protect(input, &target, &opts, password.as_deref()).map(|()| "protected".to_string())
         } else {
@@ -205,6 +208,9 @@ fn print_info(files: &[PathBuf]) -> ExitCode {
         match core::inspect(f) {
             Ok(i) => {
                 println!("{}: {}", f.display(), i.protection);
+                if i.signed {
+                    println!("  ! digitally signed – the signature becomes invalid when the file is changed");
+                }
                 if let Some(perms) = i.permissions {
                     for (flag, _, name) in PERM_NAMES {
                         println!("  {} {name}", if perms.contains(flag) { "✔ allowed:    " } else { "✘ not allowed:" });

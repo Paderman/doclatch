@@ -20,6 +20,8 @@ wurden mit KI-Unterstützung erstellt; Korrekturen von Muttersprachlern sind wil
 **Oberfläche:** `doclatch` starten, PDFs ins Fenster ziehen oder auf das Feld klicken und auf „Entsperren“ klicken.
 Das Passwortfeld erscheint nur, wenn eine Datei wirklich ein Öffnen-Passwort braucht.
 Mit der Maus über dem Status „Einschränkungen“ bzw. „Passwort“ werden die einzelnen Berechtigungen angezeigt.
+Digital signierte PDFs werden gekennzeichnet: Entsperren oder Schützen verändert die Datei, dadurch wird die Signatur ungültig.
+Der Knopf 📂 zeigt die Datei (bzw. ihr Ergebnis) markiert im Dateimanager.
 Ergebnis: `name_unlocked.pdf` neben dem Original, in einem gewählten Ordner oder (optional) als Ersatz für das Original.
 
 **Schützen** (Umschalter „🔒 Schützen“): optionales Öffnen-Passwort, optionales Rechte-Passwort
