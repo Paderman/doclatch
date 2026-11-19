@@ -228,6 +228,10 @@ pub struct App {
     pw_saved: Option<PathBuf>,
     /// Kopieren-Rückmeldung: (Feld 0/1, Zeitpunkt)
     copied: Option<(usize, std::time::Instant)>,
+    /// Breites Fenster: Speicherort steht in der Aktionsleiste neben dem Hauptknopf
+    wide_footer: bool,
+    /// Platzbedarf rechts neben dem Speicherort (Hauptknopf usw.) im breiten Modus
+    footer_right_w: f32,
     /// Höhe aller Elemente außer der Liste im letzten Bild (die Liste füllt den Rest)
     other_h: f32,
     settings: Settings,
@@ -274,6 +278,8 @@ impl App {
             pw_records: Vec::new(),
             pw_saved: None,
             copied: None,
+            wide_footer: false,
+            footer_right_w: 0.0,
             other_h: 360.0,
             settings,
             persist,
@@ -613,6 +619,7 @@ impl eframe::App for App {
                         }
                         // Aktionsleiste ist immer sichtbar; der Bereich darüber scrollt, wenn das
                         // Fenster zu niedrig ist. Die Liste bekommt den freien Platz, mindestens MIN_LIST.
+                        self.update_footer_layout(ui);
                         let viewport = (ui.available_height() - ACTION_BAR_H).max(MIN_LIST);
                         egui::ScrollArea::vertical()
                             .id_salt("main_scroll")
@@ -625,7 +632,6 @@ impl eframe::App for App {
                                 ui.add_space(12.0);
                                 let list_h = (viewport - self.other_h).max(MIN_LIST);
                                 ui.allocate_ui(Vec2::new(ui.available_width(), list_h), |ui| self.file_list(ui));
-                                ui.add_space(10.0);
                                 self.controls(ui);
                                 // Höhe aller übrigen Elemente merken (wirkt ab dem nächsten Bild)
                                 let other = ui.min_rect().height() - list_h;
@@ -962,6 +968,11 @@ impl App {
         let (pal, t) = (self.pal(), self.t());
         let needs_pw = self.needs_password();
         let protect = self.mode == Mode::Protect;
+        // Im breiten Modus steht der Speicherort unten – ohne Passwortfelder bleibt die Box leer.
+        if self.wide_footer && !needs_pw && !protect {
+            return;
+        }
+        ui.add_space(10.0);
 
         Frame::new()
             .fill(pal.surface)
@@ -989,51 +1000,58 @@ impl App {
                     self.protect_settings(ui);
                     ui.add_space(4.0);
                 }
-                ui.allocate_ui_with_layout(row, Layout::left_to_right(Align::Center), |ui| {
-                    ui.checkbox(&mut self.overwrite, RichText::new(t.overwrite).color(pal.text));
-                    ui.add_space(12.0);
-                    ui.add_enabled_ui(!self.overwrite, |ui| {
-                        let label = ui.label(RichText::new(format!("{}:", t.dest_label)).color(pal.muted));
-                        let current = match &self.out_dir {
-                            None => format!("📁 {}", t.save_next_to),
-                            Some(d) => {
-                                format!("📁 {}", d.file_name().map_or(d.to_string_lossy(), |n| n.to_string_lossy()))
-                            }
-                        };
-                        let mut pick = false;
-                        let combo = egui::ComboBox::from_id_salt("destination")
-                            .selected_text(current)
-                            .width(ui.available_width().clamp(120.0, 260.0))
-                            .show_ui(ui, |ui| {
-                                if ui.selectable_label(self.out_dir.is_none(), t.save_next_to).clicked() {
-                                    self.out_dir = None;
-                                }
-                                if let Some(d) = &self.out_dir {
-                                    let _ = ui.selectable_label(true, d.display().to_string());
-                                }
-                                pick = ui.selectable_label(false, t.choose_folder).clicked();
-                            });
-                        let combo_resp = combo.response.labelled_by(label.id);
-                        if let Some(d) = &self.out_dir {
-                            combo_resp.on_hover_text(d.display().to_string());
-                        }
-                        if pick {
-                            // Im gewählten Ordner bzw. im Ordner der ersten Datei starten, nicht im Benutzerordner
-                            let start = self
-                                .out_dir
-                                .clone()
-                                .or_else(|| self.entries.first().and_then(|e| e.path.parent().map(Path::to_path_buf)));
-                            let mut dlg = rfd::FileDialog::new();
-                            if let Some(dir) = start {
-                                dlg = dlg.set_directory(dir);
-                            }
-                            if let Some(d) = dlg.pick_folder() {
-                                self.out_dir = Some(d);
-                            }
-                        }
-                    });
-                });
+                if !self.wide_footer {
+                    ui.allocate_ui_with_layout(row, Layout::left_to_right(Align::Center), |ui| self.dest_row(ui));
+                }
             });
+    }
+
+    /// „Original überschreiben“ und „Speichern in“ – in der Optionsbox oder (breites Fenster)
+    /// direkt in der Aktionsleiste neben dem Hauptknopf.
+    fn dest_row(&mut self, ui: &mut egui::Ui) {
+        let (pal, t) = (self.pal(), self.t());
+        ui.checkbox(&mut self.overwrite, RichText::new(t.overwrite).color(pal.text));
+        ui.add_space(12.0);
+        ui.add_enabled_ui(!self.overwrite, |ui| {
+            let label = ui.label(RichText::new(format!("{}:", t.dest_label)).color(pal.muted));
+            let current = match &self.out_dir {
+                None => format!("📁 {}", t.save_next_to),
+                Some(d) => {
+                    format!("📁 {}", d.file_name().map_or(d.to_string_lossy(), |n| n.to_string_lossy()))
+                }
+            };
+            let mut pick = false;
+            let combo = egui::ComboBox::from_id_salt("destination")
+                .selected_text(current)
+                .width(ui.available_width().clamp(120.0, 260.0))
+                .show_ui(ui, |ui| {
+                    if ui.selectable_label(self.out_dir.is_none(), t.save_next_to).clicked() {
+                        self.out_dir = None;
+                    }
+                    if let Some(d) = &self.out_dir {
+                        let _ = ui.selectable_label(true, d.display().to_string());
+                    }
+                    pick = ui.selectable_label(false, t.choose_folder).clicked();
+                });
+            let combo_resp = combo.response.labelled_by(label.id);
+            if let Some(d) = &self.out_dir {
+                combo_resp.on_hover_text(d.display().to_string());
+            }
+            if pick {
+                // Im gewählten Ordner bzw. im Ordner der ersten Datei starten, nicht im Benutzerordner
+                let start = self
+                    .out_dir
+                    .clone()
+                    .or_else(|| self.entries.first().and_then(|e| e.path.parent().map(Path::to_path_buf)));
+                let mut dlg = rfd::FileDialog::new();
+                if let Some(dir) = start {
+                    dlg = dlg.set_directory(dir);
+                }
+                if let Some(d) = dlg.pick_folder() {
+                    self.out_dir = Some(d);
+                }
+            }
+        });
     }
 
     /// Fortschritt/Abbrechen bzw. Hauptknopf – fest am unteren Rand.
@@ -1041,6 +1059,12 @@ impl App {
         let (pal, t) = (self.pal(), self.t());
         let protect = self.mode == Mode::Protect;
         ui.horizontal(|ui| {
+            if self.wide_footer {
+                // auf Knopfhöhe zentriert; die Breite lässt rechts Platz für Hauptknopf usw.
+                let size = Vec2::new((ui.available_width() - self.footer_right_w).max(0.0), BUTTON_H);
+                ui.allocate_ui_with_layout(size, Layout::left_to_right(Align::Center), |ui| self.dest_row(ui));
+                ui.add_space(16.0);
+            }
             if let Some(pr) = &self.progress {
                 // Fortschritt + Abbrechen
                 let (done, total) = (pr.done, pr.total);
@@ -1112,12 +1136,43 @@ impl App {
                     self.start();
                 }
                 // Grund für den gesperrten Knopf direkt sichtbar machen (links daneben, umbrechend)
-                if !effective && n > 0 {
+                if !effective && n > 0 && !self.wide_footer {
                     ui.add_space(8.0);
                     ui.add(egui::Label::new(RichText::new(t.nothing_to_protect).size(12.0).color(pal.warn)).wrap());
                 }
             });
         });
+    }
+
+    /// Entscheidet anhand der echten Textbreiten (je nach Sprache), ob Speicherort und
+    /// Hauptknopf nebeneinander in eine Zeile passen.
+    fn update_footer_layout(&mut self, ui: &egui::Ui) {
+        let t = self.t();
+        let font = egui::TextStyle::Body.resolve(ui.style());
+        let w = |s: &str| ui.painter().layout_no_wrap(s.to_owned(), font.clone(), Color32::WHITE).size().x;
+        let gap = ui.spacing().item_spacing.x;
+        let button = |s: &str| w(s) + 2.0 * ui.spacing().button_padding.x + gap;
+        // Checkbox (Kästchen + Abstand), Abstand, Beschriftung, Auswahlfeld (mindestens 160), Abstand
+        let left = ui.spacing().icon_width
+            + ui.spacing().icon_spacing
+            + w(t.overwrite)
+            + gap
+            + 12.0
+            + w(&format!("{}:", t.dest_label))
+            + gap
+            + 160.0
+            + 16.0;
+        let mut right = 220.0 + gap;
+        if self.entries.iter().any(|e| matches!(e.status, Status::Done(..))) {
+            right += button(t.clear_done);
+        }
+        if !self.pw_records.is_empty() {
+            right += button(&format!("💾 {}", t.save_passwords));
+        }
+        // Fortschrittsbalken + Abbrechen brauchen ebenfalls Platz
+        right = right.max(button(t.cancelling).max(150.0) + gap + 160.0);
+        self.footer_right_w = right;
+        self.wide_footer = ui.available_width() >= left + right;
     }
 
     /// Speichert die Passwortliste dieser Sitzung (TXT oder CSV, je nach gewählter Endung).
@@ -1222,6 +1277,10 @@ impl App {
         }
         if !self.open_pw.is_empty() {
             ui.label(RichText::new(format!("🔐 {}", t.keep_password)).size(12.0).color(pal.warn));
+        }
+        // Im breiten Modus ist neben dem Hauptknopf kein Platz für den Hinweis – dann hier.
+        if self.wide_footer && !self.protect_options().is_effective() && self.actionable() > 0 {
+            ui.label(RichText::new(t.nothing_to_protect).size(12.0).color(pal.warn));
         }
         ui.add_space(4.0);
         ui.horizontal(|ui| {
@@ -1963,6 +2022,26 @@ mod tests {
     }
 
     #[test]
+    fn breites_fenster_zieht_speicherort_nach_unten() {
+        let (dir, files) = make_pdfs("wide", 2);
+        let mut h = harness_with(files.clone(), Lang::En, ThemePref::Dark, [1000.0, 700.0]);
+        wait(&mut h, checked);
+        h.run_steps(2);
+        assert!(h.state().wide_footer);
+        // Speicherort und Hauptknopf stehen auf einer Höhe
+        let y = |h: &Harness<'static, App>, l: &str| h.get_by_label(l).rect().center().y;
+        let knopf = format!("🔓  {}", fill(EN.unlock_n, "n", 2));
+        assert!((y(&h, EN.overwrite) - y(&h, &knopf)).abs() < 8.0);
+
+        let mut h = harness_with(files, Lang::En, ThemePref::Dark, [680.0, 700.0]);
+        wait(&mut h, checked);
+        h.run_steps(2);
+        assert!(!h.state().wide_footer, "Standardbreite: eigene Zeile für den Hauptknopf");
+        assert!(y(&h, &knopf) - y(&h, EN.overwrite) > 20.0);
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
     fn renderer_reihenfolge() {
         let r = renderers();
         assert_eq!(r.last(), Some(&eframe::Renderer::Glow), "OpenGL ist immer die letzte Rückfallebene");
@@ -2055,7 +2134,7 @@ mod tests {
         all.push(locked);
         all.push(crate::office::tests::docx(&dir, "brief.docx"));
 
-        let shots: [Shot; 9] = [
+        let shots: [Shot; 12] = [
             ("de_leer_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], vec![], Mode::Unlock, View::Main),
             ("de_entsperren_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], all.clone(), Mode::Unlock, View::Main),
             (
@@ -2081,6 +2160,25 @@ mod tests {
             ("ru_leer_klein_hell", Lang::Ru, ThemePref::Light, [540.0, 620.0], vec![], Mode::Unlock, View::Main),
             ("pl_leer_klein_dunkel", Lang::Pl, ThemePref::Dark, [540.0, 620.0], vec![], Mode::Unlock, View::Main),
             ("ru_liste_klein_dunkel", Lang::Ru, ThemePref::Dark, [540.0, 620.0], all.clone(), Mode::Unlock, View::Main),
+            (
+                "de_breit_entsperren",
+                Lang::De,
+                ThemePref::Dark,
+                [1000.0, 700.0],
+                files.clone(),
+                Mode::Unlock,
+                View::Main,
+            ),
+            (
+                "de_breit_schuetzen",
+                Lang::De,
+                ThemePref::Dark,
+                [1000.0, 760.0],
+                files.clone(),
+                Mode::Protect,
+                View::Main,
+            ),
+            ("de_breit_passwort", Lang::De, ThemePref::Light, [1000.0, 700.0], all.clone(), Mode::Unlock, View::Main),
         ];
         for (name, lang, theme, size, files, mode, view) in shots {
             let mut h = harness_with(files, lang, theme, size);
