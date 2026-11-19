@@ -372,9 +372,13 @@ fn odf_setting(name: &[u8]) -> Option<(Locks, Option<&'static str>)> {
 
 /// Schreibt einen XML-Teil um. Liefert `None`, wenn nichts zu ändern war.
 /// Unberührte Ereignisse werden byte-genau übernommen.
-fn rewrite(xml: &[u8], rules: &Rules, locks: &mut Locks) -> Result<Option<Vec<u8>>, quick_xml::Error> {
+/// Fehlerhaftes XML (falsch geschlossene oder offene Elemente) wird abgelehnt, statt es
+/// umzuschreiben – sonst entstünde eine kaputte Datei.
+fn rewrite(xml: &[u8], rules: &Rules, locks: &mut Locks) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error>> {
     let mut reader = Reader::from_reader(xml);
-    reader.config_mut().check_end_names = false;
+    reader.config_mut().check_end_names = true;
+    // Verschachtelungstiefe – muss am Ende wieder 0 sein
+    let mut depth = 0usize;
     let mut writer = quick_xml::Writer::new(Vec::with_capacity(xml.len()));
     let mut changed = false;
     // Tiefe innerhalb eines Elements, das komplett entfernt wird.
@@ -384,6 +388,12 @@ fn rewrite(xml: &[u8], rules: &Rules, locks: &mut Locks) -> Result<Option<Vec<u8
 
     loop {
         let ev = reader.read_event()?;
+        match ev {
+            Event::Start(_) => depth += 1,
+            Event::End(_) => depth = depth.saturating_sub(1),
+            Event::Eof if depth > 0 => return Err("unexpected end of document".into()),
+            _ => {}
+        }
         if skip > 0 {
             match ev {
                 Event::Start(_) => skip += 1,
@@ -719,6 +729,66 @@ pub(crate) mod tests {
         a.sort_unstable();
         b.sort_unstable();
         assert_eq!(a, b);
+    }
+
+    /// Kaputte Dateien: verständlicher Fehler, kein Absturz, keine (halbe) Ausgabedatei.
+    #[test]
+    fn kaputte_dateien() {
+        let dir = crate::core::tests::tmpdir("office-broken");
+        let out = dir.join("out.docx");
+        let check = |p: &Path, format: Format| {
+            assert!(inspect(p, format).is_err(), "{p:?}: inspect muss scheitern");
+            assert!(unlock(p, &out, format).is_err(), "{p:?}: unlock muss scheitern");
+            assert!(!out.exists(), "{p:?}: es darf keine Ausgabe entstehen");
+        };
+
+        // gar kein ZIP
+        let p = dir.join("text.docx");
+        std::fs::write(&p, "Das ist nur Text.").unwrap();
+        check(&p, Format::Ooxml);
+
+        // leere Datei
+        let p = dir.join("leer.xlsx");
+        std::fs::write(&p, "").unwrap();
+        check(&p, Format::Ooxml);
+
+        // abgeschnittenes ZIP
+        let full = docx(&dir, "ganz.docx");
+        let bytes = std::fs::read(&full).unwrap();
+        let p = dir.join("abgeschnitten.docx");
+        std::fs::write(&p, &bytes[..bytes.len() / 2]).unwrap();
+        check(&p, Format::Ooxml);
+
+        // fehlerhaftes XML im Schutz-Teil
+        let p = dir.join("kaputt.docx");
+        make_zip(
+            &p,
+            &[
+                ("[Content_Types].xml", CT, true),
+                ("word/settings.xml", "<w:settings><w:documentProtection w:enforcement=\"1\"/></w:falsch>", true),
+            ],
+        );
+        let e = unlock(&p, &out, Format::Ooxml).unwrap_err();
+        assert!(matches!(e, UnlockError::Document(ref m) if m.contains("word/settings.xml")), "{e}");
+        assert!(!out.exists());
+
+        // ODF mit kaputtem content.xml
+        let p = dir.join("kaputt.ods");
+        make_zip(
+            &p,
+            &[
+                ("mimetype", "application/vnd.oasis.opendocument.spreadsheet", false),
+                ("content.xml", "<office:document-content><table:table table:protected=\"true\"", true),
+            ],
+        );
+        check(&p, Format::Odf);
+
+        // Original bleibt bei Fehler unangetastet, auch beim Überschreiben an Ort und Stelle
+        let p = dir.join("inplace.docx");
+        std::fs::write(&p, "kein zip").unwrap();
+        assert!(unlock(&p, &p, Format::Ooxml).is_err());
+        assert_eq!(std::fs::read(&p).unwrap(), b"kein zip");
+        std::fs::remove_dir_all(dir).ok();
     }
 
     #[test]
