@@ -38,10 +38,17 @@ Protect options:
       --protect             Encrypt instead of unlocking (output: NAME_protected.pdf)
       --open-password PW    Password required to open the file (optional;
                             alternatively via DOCLATCH_OPEN_PASSWORD)
+      --generate-open-password
+                            Generate a separate random open password (22 characters)
+                            for each file and print it
       --owner-password PW   Password for full permissions (optional; empty = random)
       --allow LIST          Allowed actions, comma-separated (default: none):
                             print, print-hq, modify, copy, annotate, forms,
                             accessibility, assemble, all, none
+      --save-passwords FILE Save the result files with their passwords as text,
+                            or as CSV for password managers if FILE ends in .csv
+                            (readable only by the owner on Linux and macOS;
+                            a random permissions password is never stored)
 
 This software is provided \"as is\", without warranty of any kind. Use is at
 one's own risk; backups of important files are recommended. Only documents one
@@ -126,6 +133,8 @@ fn cli(args: Vec<String>) -> ExitCode {
         owner_password: String::new(),
         permissions: core::Permissions::empty(),
     };
+    let mut generate = false;
+    let mut save_passwords: Option<PathBuf> = None;
     let mut files = Vec::new();
 
     let mut it = args.into_iter();
@@ -146,6 +155,8 @@ fn cli(args: Vec<String>) -> ExitCode {
             "--protect" => protect = true,
             "--open-password" => opts.open_password = it.next().unwrap_or_default(),
             "--owner-password" => opts.owner_password = it.next().unwrap_or_default(),
+            "--generate-open-password" => generate = true,
+            "--save-passwords" => save_passwords = it.next().map(PathBuf::from),
             "--allow" => match parse_allow(&it.next().unwrap_or_default()) {
                 Ok(p) => opts.permissions = p,
                 Err(e) => {
@@ -165,7 +176,15 @@ fn cli(args: Vec<String>) -> ExitCode {
         return print_info(&files);
     }
 
-    if protect && !opts.is_effective() {
+    if (generate || save_passwords.is_some()) && !protect {
+        eprintln!("--generate-open-password and --save-passwords require --protect.");
+        return ExitCode::FAILURE;
+    }
+    if generate && !opts.open_password.is_empty() {
+        eprintln!("--generate-open-password cannot be combined with --open-password.");
+        return ExitCode::FAILURE;
+    }
+    if protect && !generate && !opts.is_effective() {
         eprintln!("Nothing to protect: set --open-password or restrict at least one permission (--allow).");
         return ExitCode::FAILURE;
     }
@@ -174,6 +193,7 @@ fn cli(args: Vec<String>) -> ExitCode {
     };
 
     let mut failed = 0;
+    let mut records = Vec::new();
     for input in &files {
         let target = if in_place {
             input.clone()
@@ -192,7 +212,24 @@ fn cli(args: Vec<String>) -> ExitCode {
             eprintln!("! {}: digitally signed – the signature will no longer be valid", input.display());
         }
         let result = if protect {
-            core::protect(input, &target, &opts, password.as_deref()).map(|()| "protected".to_string())
+            let mut file_opts = opts.clone();
+            if generate {
+                match export::generate_password() {
+                    Ok(pw) => file_opts.open_password = pw,
+                    Err(e) => {
+                        eprintln!("✘ random number generator: {e}");
+                        return ExitCode::FAILURE;
+                    }
+                }
+            }
+            core::protect(input, &target, &file_opts, password.as_deref()).map(|()| {
+                records.push(export::Record {
+                    file: std::path::absolute(&target).unwrap_or_else(|_| target.clone()),
+                    open: file_opts.open_password.clone(),
+                    owner: (!file_opts.owner_password.is_empty()).then(|| file_opts.owner_password.clone()),
+                });
+                if generate { format!("protected, open password: {}", file_opts.open_password) } else { "protected".into() }
+            })
         } else {
             core::unlock(input, &target, password.as_deref()).map(|p| format!("unlocked, was: {p}"))
         };
@@ -202,6 +239,19 @@ fn cli(args: Vec<String>) -> ExitCode {
                 failed += 1;
                 eprintln!("✘ {}: {e}", input.display());
             }
+        }
+    }
+    if let Some(path) = save_passwords {
+        if records.iter().any(export::Record::has_password) {
+            match export::write(&path, &export::render(&records, &i18n::EN, &path)) {
+                Ok(()) => println!("✔ passwords saved → {}", path.display()),
+                Err(e) => {
+                    failed += 1;
+                    eprintln!("✘ {}: {e}", path.display());
+                }
+            }
+        } else {
+            println!("No passwords to save (no open or permissions password was set).");
         }
     }
     if failed == 0 { ExitCode::SUCCESS } else { ExitCode::FAILURE }

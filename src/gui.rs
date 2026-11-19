@@ -1204,19 +1204,7 @@ impl App {
         else {
             return;
         };
-        let labels = crate::export::Labels {
-            title: t.export_title,
-            created: t.export_created,
-            warning: t.export_warning,
-            file: t.export_file,
-            open: t.open_password,
-            owner: t.owner_password,
-        };
-        let content = if crate::export::is_csv(&path) {
-            crate::export::to_csv(&self.pw_records, &labels)
-        } else {
-            crate::export::to_txt(&self.pw_records, &labels, &crate::export::now_utc())
-        };
+        let content = crate::export::render(&self.pw_records, t, &path);
         match crate::export::write(&path, &content) {
             Ok(()) => self.pw_saved = Some(path),
             Err(e) => {

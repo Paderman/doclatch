@@ -68,8 +68,10 @@ doclatch --in-place invoice.pdf            # overwrite the original
 DOCLATCH_PASSWORD=secret doclatch a.pdf    # password without shell history
 doclatch --gui a.pdf b.pdf                 # GUI with preselected files
 doclatch report.xlsx letter.odt            # → report_unlocked.xlsx, letter_unlocked.odt
+doclatch -p secret budget.xlsx             # decrypt an encrypted Office file
 doclatch --protect --open-password secret --allow print contract.pdf   # → contract_protected.pdf
 doclatch --protect --allow print,copy *.pdf                            # restrictions only
+doclatch --protect --generate-open-password --save-passwords pw.csv *.pdf   # own random password per file
 ```
 
 `doclatch --help` lists all options.

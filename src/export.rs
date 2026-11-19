@@ -144,6 +144,19 @@ pub fn write(path: &Path, content: &str) -> std::io::Result<()> {
 }
 
 /// CSV, wenn die Endung `.csv` lautet, sonst Text.
+/// Inhalt der Passwortliste für `path` (CSV bei Endung `.csv`, sonst Text) in der Sprache `t`.
+pub fn render(records: &[Record], t: &crate::i18n::Strings, path: &Path) -> String {
+    let labels = Labels {
+        title: t.export_title,
+        created: t.export_created,
+        warning: t.export_warning,
+        file: t.export_file,
+        open: t.open_password,
+        owner: t.owner_password,
+    };
+    if is_csv(path) { to_csv(records, &labels) } else { to_txt(records, &labels, &now_utc()) }
+}
+
 pub fn is_csv(path: &Path) -> bool {
     path.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("csv"))
 }

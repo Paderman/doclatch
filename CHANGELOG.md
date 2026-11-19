@@ -25,6 +25,8 @@ All notable changes to Doclatch are listed here. The format follows
 - **Password list export** after protecting: result files with their passwords as readable text
   (`.txt`) or as CSV for importing into password managers (`.csv`). On Linux and macOS the file is
   readable only by the owner. A random permissions password is never stored.
+- Command line: `--generate-open-password` creates a separate random open password for each file
+  and prints it; `--save-passwords FILE` saves the password list (`.txt` or `.csv`).
 - “×” inside password fields to clear them.
 - Details on hover (or long press on touch screens) over a whole file entry: permissions or
   Office protection before processing, applied protection or removed restrictions afterwards,
