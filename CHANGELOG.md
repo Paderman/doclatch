@@ -4,7 +4,7 @@ All notable changes to Doclatch are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version numbers follow
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] – unreleased
 
 ### Added
 
@@ -50,5 +50,5 @@ First release: removes and adds password protection and permission restrictions 
 (RC4 40/128-bit, AES-128, AES-256), graphical interface in 11 languages and command line,
 optional update check.
 
-[Unreleased]: https://github.com/Paderman/doclatch/compare/v0.1.0...HEAD
+[0.2.0]: https://github.com/Paderman/doclatch/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/Paderman/doclatch/releases/tag/v0.1.0
