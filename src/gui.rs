@@ -716,7 +716,7 @@ impl App {
         let (pal, t) = (self.pal(), self.t());
         // Sobald Dateien da sind, wird das Feld flacher – mehr Platz für Liste und Einstellungen.
         let compact = !self.entries.is_empty();
-        let height = if compact { 64.0 } else { 120.0 };
+        let height = if compact { 48.0 } else { 80.0 };
         let (rect, resp) = ui.allocate_exact_size(Vec2::new(ui.available_width(), height), Sense::click());
         let active = hovering || (resp.hovered() && !self.busy());
         let (fill_c, stroke) = if active {
@@ -725,40 +725,25 @@ impl App {
             (pal.surface, Stroke::new(1.0, pal.border))
         };
         let p = ui.painter();
-        p.rect(rect, CornerRadius::same(16), fill_c, stroke, StrokeKind::Inside);
-        dashed_border(p, rect.shrink(8.0), if active { pal.accent } else { pal.border });
-        if compact {
-            let title = if hovering { t.drop_release } else { t.drop_title };
-            let font = fit_font(p, &format!("📄  {title}"), 14.0, rect.width() - 40.0);
-            p.text(
-                rect.center(),
-                egui::Align2::CENTER_CENTER,
-                format!("📄  {title}"),
-                font,
-                if active { pal.accent_hi } else { pal.text },
-            );
-        } else {
-            p.text(
-                rect.center() - Vec2::new(0.0, 16.0),
-                egui::Align2::CENTER_CENTER,
-                "📄",
-                FontId::proportional(28.0),
-                if active { pal.accent_hi } else { pal.muted },
-            );
-            let title = if hovering { t.drop_release } else { t.drop_title };
-            p.text(
-                rect.center() + Vec2::new(0.0, 16.0),
-                egui::Align2::CENTER_CENTER,
-                title,
-                fit_font(p, title, 15.0, rect.width() - 40.0),
-                pal.text,
-            );
+        p.rect(rect, CornerRadius::same(14), fill_c, stroke, StrokeKind::Inside);
+        dashed_border(p, rect.shrink(6.0), if active { pal.accent } else { pal.border });
+        // Symbol und Titel in einer Zeile; ohne Dateien darunter der Hinweis mit den Endungen.
+        let title = format!("📄  {}", if hovering { t.drop_release } else { t.drop_title });
+        let title_y = if compact { 0.0 } else { -10.0 };
+        p.text(
+            rect.center() + Vec2::new(0.0, title_y),
+            egui::Align2::CENTER_CENTER,
+            &title,
+            fit_font(p, &title, if compact { 14.0 } else { 15.0 }, rect.width() - 40.0),
+            if active { pal.accent_hi } else { pal.text },
+        );
+        if !compact {
             // Hinweis mit den gängigen Endungen; passt beides nicht in die Breite, nur die Endungen.
             let font = FontId::proportional(12.0);
             let full = format!("{} · {DROP_EXTENSIONS}", t.drop_hint);
             let fits = p.layout_no_wrap(full.clone(), font.clone(), pal.muted).size().x < rect.width() - 40.0;
             p.text(
-                rect.center() + Vec2::new(0.0, 36.0),
+                rect.center() + Vec2::new(0.0, 13.0),
                 egui::Align2::CENTER_CENTER,
                 if fits { full } else { DROP_EXTENSIONS.to_string() },
                 font,
