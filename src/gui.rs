@@ -66,8 +66,12 @@ const LARGE_FILE: u64 = 500 * 1024 * 1024;
 const CARD_H: f32 = 60.0;
 /// Mindesthöhe der Dateiliste, bevor die Ansicht stattdessen scrollt.
 const MIN_LIST: f32 = 110.0;
+/// Höhe der Knöpfe in der Aktionsleiste.
+const BUTTON_H: f32 = 36.0;
 /// Platz für die Aktionsleiste unten (Knopfhöhe + Abstand).
-const ACTION_BAR_H: f32 = 54.0;
+const ACTION_BAR_H: f32 = BUTTON_H + 12.0;
+/// Zeilenhöhe im Optionsbereich (Passwortfelder, Speicherort).
+const ROW_H: f32 = 28.0;
 
 // ---------- Zustand ----------
 /// Fehlergrund – sprachunabhängig gespeichert, Text erst beim Anzeigen übersetzt.
@@ -962,11 +966,11 @@ impl App {
         Frame::new()
             .fill(pal.surface)
             .stroke(Stroke::new(1.0, pal.border))
-            .corner_radius(CornerRadius::same(14))
-            .inner_margin(Margin::same(14))
+            .corner_radius(CornerRadius::same(12))
+            .inner_margin(Margin::symmetric(14, 8))
             .show(ui, |ui| {
                 ui.set_width(ui.available_width());
-                let row = Vec2::new(ui.available_width(), 32.0);
+                let row = Vec2::new(ui.available_width(), ROW_H);
                 if needs_pw {
                     ui.allocate_ui_with_layout(row, Layout::left_to_right(Align::Center), |ui| {
                         ui.label(RichText::new(if protect { t.current_password } else { t.password }).color(pal.muted));
@@ -979,11 +983,11 @@ impl App {
                             self.show_password = !self.show_password;
                         }
                     });
-                    ui.add_space(8.0);
+                    ui.add_space(4.0);
                 }
                 if protect {
                     self.protect_settings(ui);
-                    ui.add_space(8.0);
+                    ui.add_space(4.0);
                 }
                 ui.allocate_ui_with_layout(row, Layout::left_to_right(Align::Center), |ui| {
                     ui.checkbox(&mut self.overwrite, RichText::new(t.overwrite).color(pal.text));
@@ -1045,7 +1049,7 @@ impl App {
                     egui::Button::new(RichText::new(if cancelling { t.cancelling } else { t.cancel }).color(pal.text))
                         .fill(pal.surface_hi)
                         .corner_radius(CornerRadius::same(10))
-                        .min_size(Vec2::new(150.0, 42.0));
+                        .min_size(Vec2::new(150.0, BUTTON_H));
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     if ui.add_enabled(!cancelling, cancel_btn).clicked() {
                         pr.cancel.store(true, Ordering::Relaxed);
@@ -1055,7 +1059,7 @@ impl App {
                         egui::ProgressBar::new(done as f32 / total.max(1) as f32)
                             .text(format!("{done} / {total}"))
                             .fill(pal.accent)
-                            .desired_height(42.0)
+                            .desired_height(BUTTON_H)
                             .corner_radius(CornerRadius::same(10)),
                     );
                 });
@@ -1068,7 +1072,7 @@ impl App {
                 let clear = egui::Button::new(RichText::new(t.clear_done).color(pal.muted))
                     .fill(pal.surface_hi)
                     .corner_radius(CornerRadius::same(10))
-                    .min_size(Vec2::new(0.0, 42.0));
+                    .min_size(Vec2::new(0.0, BUTTON_H));
                 if ui.add(clear).clicked() {
                     self.entries.retain(|e| !matches!(e.status, Status::Done(..)));
                     self.rebuild_index();
@@ -1081,7 +1085,7 @@ impl App {
                 let b = egui::Button::new(RichText::new(label).color(if saved { pal.success } else { pal.text }))
                     .fill(pal.surface_hi)
                     .corner_radius(CornerRadius::same(10))
-                    .min_size(Vec2::new(0.0, 42.0));
+                    .min_size(Vec2::new(0.0, BUTTON_H));
                 let hover = match &self.pw_saved {
                     Some(p) => fill(t.passwords_saved, "path", p.display()),
                     None => t.export_warning.to_string(),
@@ -1099,7 +1103,7 @@ impl App {
                 let btn = egui::Button::new(RichText::new(text).size(15.0).strong().color(Color32::WHITE))
                     .fill(if enabled { pal.accent } else { pal.accent.gamma_multiply(0.35) })
                     .corner_radius(CornerRadius::same(10))
-                    .min_size(Vec2::new(220.0, 42.0));
+                    .min_size(Vec2::new(220.0, BUTTON_H));
                 let mut r = ui.add_enabled(enabled, btn);
                 if !effective {
                     r = r.on_disabled_hover_text(t.nothing_to_protect);
@@ -1165,7 +1169,7 @@ impl App {
         for (i, (label, hint)) in
             [(t.open_password, t.open_pw_hint), (t.owner_password, t.owner_pw_hint)].into_iter().enumerate()
         {
-            let row = Vec2::new(ui.available_width(), 32.0);
+            let row = Vec2::new(ui.available_width(), ROW_H);
             ui.allocate_ui_with_layout(row, Layout::left_to_right(Align::Center), |ui| {
                 ui.allocate_ui_with_layout(Vec2::new(label_w, 20.0), Layout::left_to_right(Align::Center), |ui| {
                     ui.set_min_width(label_w);
@@ -1461,7 +1465,7 @@ fn password_edit(
             .password(!show)
             .hint_text(hint)
             // rechts Platz für das „×“
-            .margin(Margin { left: 10, right: 30, top: 7, bottom: 7 })
+            .margin(Margin { left: 10, right: 30, top: 5, bottom: 5 })
             .desired_width(width),
     );
     if !text.is_empty() {
