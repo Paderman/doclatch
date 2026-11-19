@@ -43,7 +43,7 @@ Ergebnis: `name_unlocked.pdf` neben dem Original, in einem gewählten Ordner ode
 
 **Schützen** (Umschalter „🔒 Schützen“): optionales Öffnen-Passwort, optionales Rechte-Passwort
 (leer = zufällig) und die erlaubten Aktionen wählen. Ergebnis: `name_protected.pdf`.
-🔄 erzeugt ein zufälliges Passwort (20 Zeichen ohne verwechselbare wie `0/O` oder `l/1/I`), 📑 kopiert es.
+🔄 erzeugt ein zufälliges Passwort (22 Zeichen ohne verwechselbare wie `0/O` oder `l/1/I`), 📑 kopiert es.
 Nach dem Schützen speichert „💾 Passwörter speichern…“ eine Liste der Ergebnisdateien samt Passwörtern –
 als lesbaren Text (`.txt`) oder als CSV zum Import in Passwortmanager wie KeePassXC oder Bitwarden (`.csv`).
 Die Liste ist nicht verschlüsselt; unter Linux und macOS ist sie nur für den Besitzer lesbar.

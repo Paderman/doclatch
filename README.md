@@ -41,7 +41,7 @@ Result: `name_unlocked.pdf` next to the original, in a chosen folder, or (option
 
 **Protect** (switch “🔒 Protect”): choose an optional open password, an optional permissions password
 (empty = random) and the allowed actions. Result: `name_protected.pdf`.
-🔄 generates a random password (20 characters without easily confused ones such as `0/O` or `l/1/I`),
+🔄 generates a random password (22 characters without easily confused ones such as `0/O` or `l/1/I`),
 📑 copies it. After protecting, “💾 Save passwords…” stores a list of the result files with their
 passwords – as readable text (`.txt`) or as CSV for importing into password managers such as
 KeePassXC or Bitwarden (`.csv`). The list is not encrypted; on Linux and macOS it is readable

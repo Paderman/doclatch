@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 /// Tastaturbelegungen schwer zu tippen sind.
 const ALPHABET: &[u8] = b"ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789-_.!#%+=?@";
 
-/// Länge erzeugter Passwörter (bei 66 Zeichen rund 120 Bit Zufall).
-pub const GENERATED_LEN: usize = 20;
+/// Länge erzeugter Passwörter (bei 66 Zeichen rund 133 Bit Zufall – über der üblichen 128-Bit-Marke).
+pub const GENERATED_LEN: usize = 22;
 
 /// Erzeugt ein zufälliges Passwort aus [`ALPHABET`] (gleichverteilt per Verwerfungsmethode).
 /// Das erste Zeichen ist immer ein Buchstabe oder eine Ziffer – ein führendes `=`, `+`, `-` oder
