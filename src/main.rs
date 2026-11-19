@@ -42,9 +42,9 @@ Protect options:
                             print, print-hq, modify, copy, annotate, forms,
                             accessibility, assemble, all, none
 
-This software is provided \"as is\", without warranty of any kind. Use it at your
-own risk and keep backups of important files. Only process documents you are
-entitled to edit.
+This software is provided \"as is\", without warranty of any kind. Use is at
+one's own risk; backups of important files are recommended. Only documents one
+is entitled to edit should be processed.
 ";
 
 /// Namen für `--allow` und `--info`.
