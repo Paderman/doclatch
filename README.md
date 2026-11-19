@@ -3,8 +3,8 @@
 **English** · [Deutsch](README.de.md)
 
 <p align="center">
-  <img src="docs/screenshots/unlock-dark.png" width="32%" alt="Unlock view showing the permissions of a restricted PDF">
-  <img src="docs/screenshots/protect-light.png" width="32%" alt="Protect view with open password and allowed actions">
+  <img src="docs/screenshots/unlock-dark.png" width="32%" alt="Unlock view with PDF and Office files and the protection found in a spreadsheet">
+  <img src="docs/screenshots/protect-light.png" width="32%" alt="Protect view with a generated open password and allowed actions">
   <img src="docs/screenshots/settings-dark.png" width="32%" alt="Settings with theme, language and updates">
 </p>
 
@@ -12,7 +12,7 @@ Removes password protection and permission restrictions (printing, copying, edit
 or protects PDFs with AES-256, an open password and selected restrictions.
 Pure Rust, runs natively on Linux, Windows and macOS. Files are processed locally and never uploaded.
 
-> To remove an **open password**, you need to know the password (user or owner password).
+> To remove an **open password**, the password must be known (user or owner password).
 > Pure restrictions (the PDF opens without a password) are removed without any input.
 
 Supported: RC4 40/128-bit, AES-128, AES-256 (standard security handler, PDF 1.4 – 2.0).
@@ -120,7 +120,7 @@ install -Dm644 packaging/doclatch.desktop ~/.local/share/applications/doclatch.d
 **Locally: Linux for all architectures (cargo-zigbuild)**
 
 ```bash
-cargo install --locked cargo-zigbuild cargo-deb      # Zig: pip install ziglang (or your package manager)
+cargo install --locked cargo-zigbuild cargo-deb      # Zig: pip install ziglang (or the system package manager)
 rustup target add aarch64-unknown-linux-gnu riscv64gc-unknown-linux-gnu
 scripts/build-linux.sh                               # → dist/
 ```
@@ -160,5 +160,5 @@ Regenerate after dependency updates: `python3 scripts/gen_licenses.py`
 
 ## Disclaimer
 
-This software is provided “as is”, without warranty of any kind. Use it at your own risk and keep
-backups of important files. Only process documents you are entitled to edit.
+This software is provided “as is”, without warranty of any kind. Use is at one’s own risk; backups of
+important files are recommended. Only documents one is entitled to edit should be processed.

@@ -3,8 +3,8 @@
 [English](README.md) · **Deutsch**
 
 <p align="center">
-  <img src="docs/screenshots/unlock-dark.png" width="32%" alt="Entsperren-Ansicht mit den Berechtigungen einer eingeschränkten PDF">
-  <img src="docs/screenshots/protect-light.png" width="32%" alt="Schützen-Ansicht mit Öffnen-Passwort und erlaubten Aktionen">
+  <img src="docs/screenshots/unlock-dark.png" width="32%" alt="Entsperren-Ansicht mit PDF- und Office-Dateien und dem gefundenen Schutz einer Tabelle">
+  <img src="docs/screenshots/protect-light.png" width="32%" alt="Schützen-Ansicht mit erzeugtem Öffnen-Passwort und erlaubten Aktionen">
   <img src="docs/screenshots/settings-dark.png" width="32%" alt="Einstellungen mit Theme, Sprache und Updates">
 </p>
 

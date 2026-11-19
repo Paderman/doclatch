@@ -2408,7 +2408,15 @@ mod tests {
         std::fs::copy(&restricted, dir.join("invoice.pdf")).unwrap();
         encrypted_file(&dir, "contract.pdf", 5, "secret", "owner");
         signed_sample().save(dir.join("application-form.pdf")).unwrap();
-        let names = ["report.pdf", "contract.pdf", "invoice.pdf", "application-form.pdf"];
+        crate::office::tests::make_zip(
+            &dir.join("budget.xlsx"),
+            &[
+                ("[Content_Types].xml", "<Types/>", true),
+                ("xl/workbook.xml", r#"<workbook xmlns="x"><workbookProtection lockStructure="1"/></workbook>"#, true),
+                ("xl/worksheets/sheet1.xml", r#"<worksheet xmlns="x"><sheetProtection sheet="1"/></worksheet>"#, true),
+            ],
+        );
+        let names = ["report.pdf", "contract.pdf", "budget.xlsx", "invoice.pdf", "application-form.pdf"];
         let files: Vec<PathBuf> = names.iter().map(|n| dir.join(n)).collect();
 
         let shot = |name: &str, theme: ThemePref, files: Vec<PathBuf>, prep: &dyn Fn(&mut Harness<'static, App>)| {
@@ -2420,11 +2428,12 @@ mod tests {
         };
         shot("unlock-dark", ThemePref::Dark, files.clone(), &|h| {
             h.run_steps(2);
-            h.query_all_by_label_contains(EN.st_restricted).next().expect("Badge fehlt").hover();
+            hover_entry(h, "budget.xlsx");
         });
         shot("protect-light", ThemePref::Light, files[..1].to_vec(), &|h| {
             h.state_mut().mode = Mode::Protect;
-            h.state_mut().open_pw = "example".into();
+            h.state_mut().open_pw = "Kx7mPq2wVt9nRb4hJs8eLd".into();
+            h.state_mut().show_new_pw = true;
             h.state_mut().allowed = Permissions::PRINTABLE | Permissions::COPYABLE_FOR_ACCESSIBILITY;
         });
         shot("settings-dark", ThemePref::Dark, vec![], &|h| h.state_mut().view = View::Settings);
