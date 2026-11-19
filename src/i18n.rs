@@ -224,6 +224,7 @@ strings!(
     export_created,
     export_file,
     export_warning,
+    clear_field,
 );
 
 pub static EN: Strings = Strings {
@@ -348,6 +349,7 @@ pub static EN: Strings = Strings {
     export_created: "Created",
     export_file: "File",
     export_warning: "This file is not encrypted – store it separately from the documents.",
+    clear_field: "Clear",
 };
 
 pub static DE: Strings = Strings {
@@ -472,6 +474,7 @@ pub static DE: Strings = Strings {
     export_created: "Erstellt",
     export_file: "Datei",
     export_warning: "Diese Datei ist nicht verschlüsselt – getrennt von den Dokumenten aufbewahren.",
+    clear_field: "Leeren",
 };
 
 pub static FR: Strings = Strings {
@@ -596,6 +599,7 @@ pub static FR: Strings = Strings {
     export_created: "Créé le",
     export_file: "Fichier",
     export_warning: "Ce fichier n’est pas chiffré – à conserver séparément des documents.",
+    clear_field: "Effacer",
 };
 
 pub static ES: Strings = Strings {
@@ -720,6 +724,7 @@ pub static ES: Strings = Strings {
     export_created: "Creado",
     export_file: "Archivo",
     export_warning: "Este archivo no está cifrado: debe guardarse por separado de los documentos.",
+    clear_field: "Borrar",
 };
 
 pub static IT: Strings = Strings {
@@ -844,6 +849,7 @@ pub static IT: Strings = Strings {
     export_created: "Creato",
     export_file: "File",
     export_warning: "Questo file non è crittografato – va conservato separatamente dai documenti.",
+    clear_field: "Cancella",
 };
 
 pub static PT: Strings = Strings {
@@ -968,6 +974,7 @@ pub static PT: Strings = Strings {
     export_created: "Criado em",
     export_file: "Arquivo",
     export_warning: "Este arquivo não está criptografado – deve ser guardado separado dos documentos.",
+    clear_field: "Limpar",
 };
 
 pub static NL: Strings = Strings {
@@ -1092,6 +1099,7 @@ pub static NL: Strings = Strings {
     export_created: "Aangemaakt",
     export_file: "Bestand",
     export_warning: "Dit bestand is niet versleuteld – apart van de documenten bewaren.",
+    clear_field: "Wissen",
 };
 
 pub static PL: Strings = Strings {
@@ -1216,6 +1224,7 @@ pub static PL: Strings = Strings {
     export_created: "Utworzono",
     export_file: "Plik",
     export_warning: "Ten plik nie jest zaszyfrowany – należy przechowywać go oddzielnie od dokumentów.",
+    clear_field: "Wyczyść",
 };
 
 pub static TR: Strings = Strings {
@@ -1340,6 +1349,7 @@ pub static TR: Strings = Strings {
     export_created: "Oluşturulma",
     export_file: "Dosya",
     export_warning: "Bu dosya şifrelenmemiştir – belgelerden ayrı saklanmalıdır.",
+    clear_field: "Temizle",
 };
 
 pub static RU: Strings = Strings {
@@ -1464,6 +1474,7 @@ pub static RU: Strings = Strings {
     export_created: "Создано",
     export_file: "Файл",
     export_warning: "Этот файл не зашифрован – его следует хранить отдельно от документов.",
+    clear_field: "Очистить",
 };
 
 pub static UK: Strings = Strings {
@@ -1588,6 +1599,7 @@ pub static UK: Strings = Strings {
     export_created: "Створено",
     export_file: "Файл",
     export_warning: "Цей файл не зашифровано – його слід зберігати окремо від документів.",
+    clear_field: "Очистити",
 };
 
 #[cfg(test)]

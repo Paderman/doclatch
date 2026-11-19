@@ -986,13 +986,7 @@ impl App {
                     ui.allocate_ui_with_layout(row, Layout::left_to_right(Align::Center), |ui| {
                         ui.label(RichText::new(if protect { t.current_password } else { t.password }).color(pal.muted));
                         let w = ui.available_width() - 44.0;
-                        ui.add(
-                            egui::TextEdit::singleline(&mut self.password)
-                                .password(!self.show_password)
-                                .hint_text(t.pw_hint)
-                                .margin(Margin::symmetric(10, 7))
-                                .desired_width(w),
-                        );
+                        password_edit(ui, pal, &mut self.password, self.show_password, t.pw_hint, w, t.clear_field);
                         let eye = egui::Button::new(if self.show_password { "🙈" } else { "👁" })
                             .fill(pal.surface_hi)
                             .corner_radius(CornerRadius::same(8));
@@ -1220,13 +1214,8 @@ impl App {
                         *text = pw;
                         reveal = true;
                     }
-                    ui.add(
-                        egui::TextEdit::singleline(text)
-                            .password(!show)
-                            .hint_text(hint)
-                            .margin(Margin::symmetric(10, 7))
-                            .desired_width(ui.available_width()),
-                    );
+                    let w = ui.available_width();
+                    password_edit(ui, pal, text, show, hint, w, t.clear_field);
                 });
             });
             ui.add_space(4.0);
@@ -1469,6 +1458,39 @@ fn fit_font(p: &egui::Painter, text: &str, size: f32, width: f32) -> FontId {
         size -= 0.5;
     }
     FontId::proportional(size)
+}
+
+/// Einzeiliges Passwortfeld mit „×“ zum Leeren, das nur erscheint, wenn etwas drinsteht.
+/// Das „×“ wird nur gezeichnet und abgefragt (keine Layout-Fläche), damit es im Feld liegt.
+fn password_edit(
+    ui: &mut egui::Ui,
+    pal: &Palette,
+    text: &mut String,
+    show: bool,
+    hint: &str,
+    width: f32,
+    clear_tip: &str,
+) -> egui::Response {
+    let resp = ui.add(
+        egui::TextEdit::singleline(text)
+            .password(!show)
+            .hint_text(hint)
+            // rechts Platz für das „×“
+            .margin(Margin { left: 10, right: 30, top: 7, bottom: 7 })
+            .desired_width(width),
+    );
+    if !text.is_empty() {
+        let r = resp.rect;
+        let rect = egui::Rect::from_center_size(egui::pos2(r.right() - 16.0, r.center().y), Vec2::splat(22.0));
+        let btn = ui.interact(rect, resp.id.with("clear"), Sense::click());
+        let color = if btn.hovered() { pal.text } else { pal.muted };
+        ui.painter().text(rect.center(), egui::Align2::CENTER_CENTER, "×", FontId::proportional(17.0), color);
+        if btn.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(clear_tip).clicked() {
+            text.clear();
+            resp.request_focus();
+        }
+    }
+    resp
 }
 
 /// Mindestbreite der kleinen Knöpfe neben den Passwortfeldern.
@@ -1927,6 +1949,16 @@ mod tests {
         assert!(h.state().show_new_pw);
         assert!(h.query_by_label(&format!("💾 {}", EN.save_passwords)).is_none(), "noch nichts geschützt");
 
+        // „×“ leert das Feld; danach erzeugt 🔄 ein neues Passwort
+        h.get_by_label(EN.clear_field).click();
+        h.run_steps(2);
+        assert!(h.state().open_pw.is_empty());
+        assert!(h.query_by_label(EN.clear_field).is_none(), "× nur bei Inhalt");
+        h.query_all_by_label("🔄").next().unwrap().click();
+        h.run_steps(2);
+        let pw = h.state().open_pw.clone();
+        assert_eq!(pw.len(), crate::export::GENERATED_LEN);
+
         h.get_by_label(&format!("🔒  {}", fill(EN.protect_n, "n", 2))).click();
         h.run_steps(1);
         wait(&mut h, |a| a.progress.is_none());
@@ -2066,6 +2098,12 @@ mod tests {
             wait(&mut h, checked);
             h.state_mut().mode = mode;
             h.state_mut().view = view;
+            // gefüllte Felder zeigen das „×“ zum Leeren
+            h.state_mut().password = "geheim".into();
+            if mode == Mode::Protect {
+                h.state_mut().open_pw = "Kx7mPq2wVt9nRb4hJs8e".into();
+                h.state_mut().show_new_pw = true;
+            }
             h.run_steps(6);
             let img = h.render().expect("Rendern fehlgeschlagen");
             img.save(out.join(format!("{name}.png"))).unwrap();
