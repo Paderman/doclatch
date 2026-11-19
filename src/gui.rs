@@ -1093,7 +1093,7 @@ impl App {
             let n = self.actionable();
             let done = self.entries.iter().filter(|e| matches!(e.status, Status::Done(..))).count();
             if done > 0 {
-                let clear = egui::Button::new(RichText::new(t.clear_done).color(pal.muted))
+                let clear = egui::Button::new(RichText::new(format!("☑ {}", t.clear_done)).color(pal.muted))
                     .fill(pal.surface_hi)
                     .corner_radius(CornerRadius::same(10))
                     .min_size(Vec2::new(0.0, BUTTON_H));
@@ -1164,7 +1164,7 @@ impl App {
             + 16.0;
         let mut right = 220.0 + gap;
         if self.entries.iter().any(|e| matches!(e.status, Status::Done(..))) {
-            right += button(t.clear_done);
+            right += button(&format!("☑ {}", t.clear_done));
         }
         if !self.pw_records.is_empty() {
             right += button(&format!("💾 {}", t.save_passwords));
@@ -2134,7 +2134,7 @@ mod tests {
         all.push(locked);
         all.push(crate::office::tests::docx(&dir, "brief.docx"));
 
-        let shots: [Shot; 12] = [
+        let shots: [Shot; 14] = [
             ("de_leer_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], vec![], Mode::Unlock, View::Main),
             ("de_entsperren_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], all.clone(), Mode::Unlock, View::Main),
             (
@@ -2179,6 +2179,8 @@ mod tests {
                 View::Main,
             ),
             ("de_breit_passwort", Lang::De, ThemePref::Light, [1000.0, 700.0], all.clone(), Mode::Unlock, View::Main),
+            ("de_erledigt", Lang::De, ThemePref::Dark, [680.0, 780.0], files.clone(), Mode::Protect, View::Main),
+            ("de_breit_erledigt", Lang::De, ThemePref::Dark, [1000.0, 780.0], files.clone(), Mode::Protect, View::Main),
         ];
         for (name, lang, theme, size, files, mode, view) in shots {
             let mut h = harness_with(files, lang, theme, size);
@@ -2190,6 +2192,13 @@ mod tests {
             if mode == Mode::Protect {
                 h.state_mut().open_pw = "Kx7mPq2wVt9nRb4hJs8e".into();
                 h.state_mut().show_new_pw = true;
+            }
+            // erledigte Einträge und Passwortliste: zeigt „Erledigte entfernen“ und „Passwörter speichern“
+            if name.ends_with("erledigt") {
+                let st = h.state_mut();
+                let out = st.entries[0].path.with_file_name("datei_0000_protected.pdf");
+                st.entries[0].status = Status::Done(out.clone(), Mode::Protect);
+                st.pw_records.push(crate::export::Record { file: out, open: "x".into(), owner: None });
             }
             h.run_steps(6);
             let img = h.render().expect("Rendern fehlgeschlagen");
