@@ -225,6 +225,9 @@ strings!(
     export_file,
     export_warning,
     clear_field,
+    tip_opens_freely,
+    tip_removed,
+    tip_all_allowed,
 );
 
 pub static EN: Strings = Strings {
@@ -350,6 +353,9 @@ pub static EN: Strings = Strings {
     export_file: "File",
     export_warning: "This file is not encrypted – store it separately from the documents.",
     clear_field: "Clear",
+    tip_opens_freely: "Opens without a password; only the selected restrictions apply.",
+    tip_removed: "Removed:",
+    tip_all_allowed: "All actions are allowed now.",
 };
 
 pub static DE: Strings = Strings {
@@ -475,6 +481,9 @@ pub static DE: Strings = Strings {
     export_file: "Datei",
     export_warning: "Diese Datei ist nicht verschlüsselt – getrennt von den Dokumenten aufbewahren.",
     clear_field: "Leeren",
+    tip_opens_freely: "Öffnet sich ohne Passwort; es gelten nur die gewählten Einschränkungen.",
+    tip_removed: "Entfernt:",
+    tip_all_allowed: "Alle Aktionen sind jetzt erlaubt.",
 };
 
 pub static FR: Strings = Strings {
@@ -600,6 +609,9 @@ pub static FR: Strings = Strings {
     export_file: "Fichier",
     export_warning: "Ce fichier n’est pas chiffré – à conserver séparément des documents.",
     clear_field: "Effacer",
+    tip_opens_freely: "S’ouvre sans mot de passe ; seules les restrictions choisies s’appliquent.",
+    tip_removed: "Supprimé :",
+    tip_all_allowed: "Toutes les actions sont désormais autorisées.",
 };
 
 pub static ES: Strings = Strings {
@@ -725,6 +737,9 @@ pub static ES: Strings = Strings {
     export_file: "Archivo",
     export_warning: "Este archivo no está cifrado: debe guardarse por separado de los documentos.",
     clear_field: "Borrar",
+    tip_opens_freely: "Se abre sin contraseña; solo se aplican las restricciones elegidas.",
+    tip_removed: "Eliminado:",
+    tip_all_allowed: "Ahora se permiten todas las acciones.",
 };
 
 pub static IT: Strings = Strings {
@@ -850,6 +865,9 @@ pub static IT: Strings = Strings {
     export_file: "File",
     export_warning: "Questo file non è crittografato – va conservato separatamente dai documenti.",
     clear_field: "Cancella",
+    tip_opens_freely: "Si apre senza password; valgono solo le restrizioni scelte.",
+    tip_removed: "Rimosso:",
+    tip_all_allowed: "Ora tutte le azioni sono consentite.",
 };
 
 pub static PT: Strings = Strings {
@@ -975,6 +993,9 @@ pub static PT: Strings = Strings {
     export_file: "Arquivo",
     export_warning: "Este arquivo não está criptografado – deve ser guardado separado dos documentos.",
     clear_field: "Limpar",
+    tip_opens_freely: "Abre sem senha; apenas as restrições escolhidas se aplicam.",
+    tip_removed: "Removido:",
+    tip_all_allowed: "Agora todas as ações são permitidas.",
 };
 
 pub static NL: Strings = Strings {
@@ -1100,6 +1121,9 @@ pub static NL: Strings = Strings {
     export_file: "Bestand",
     export_warning: "Dit bestand is niet versleuteld – apart van de documenten bewaren.",
     clear_field: "Wissen",
+    tip_opens_freely: "Opent zonder wachtwoord; alleen de gekozen beperkingen gelden.",
+    tip_removed: "Verwijderd:",
+    tip_all_allowed: "Alle acties zijn nu toegestaan.",
 };
 
 pub static PL: Strings = Strings {
@@ -1225,6 +1249,9 @@ pub static PL: Strings = Strings {
     export_file: "Plik",
     export_warning: "Ten plik nie jest zaszyfrowany – należy przechowywać go oddzielnie od dokumentów.",
     clear_field: "Wyczyść",
+    tip_opens_freely: "Otwiera się bez hasła; obowiązują tylko wybrane ograniczenia.",
+    tip_removed: "Usunięto:",
+    tip_all_allowed: "Wszystkie działania są teraz dozwolone.",
 };
 
 pub static TR: Strings = Strings {
@@ -1350,6 +1377,9 @@ pub static TR: Strings = Strings {
     export_file: "Dosya",
     export_warning: "Bu dosya şifrelenmemiştir – belgelerden ayrı saklanmalıdır.",
     clear_field: "Temizle",
+    tip_opens_freely: "Parola olmadan açılır; yalnızca seçilen kısıtlamalar geçerlidir.",
+    tip_removed: "Kaldırılanlar:",
+    tip_all_allowed: "Artık tüm işlemlere izin veriliyor.",
 };
 
 pub static RU: Strings = Strings {
@@ -1475,6 +1505,9 @@ pub static RU: Strings = Strings {
     export_file: "Файл",
     export_warning: "Этот файл не зашифрован – его следует хранить отдельно от документов.",
     clear_field: "Очистить",
+    tip_opens_freely: "Открывается без пароля; действуют только выбранные ограничения.",
+    tip_removed: "Удалено:",
+    tip_all_allowed: "Теперь разрешены все действия.",
 };
 
 pub static UK: Strings = Strings {
@@ -1600,6 +1633,9 @@ pub static UK: Strings = Strings {
     export_file: "Файл",
     export_warning: "Цей файл не зашифровано – його слід зберігати окремо від документів.",
     clear_field: "Очистити",
+    tip_opens_freely: "Відкривається без пароля; діють лише вибрані обмеження.",
+    tip_removed: "Видалено:",
+    tip_all_allowed: "Тепер дозволено всі дії.",
 };
 
 #[cfg(test)]

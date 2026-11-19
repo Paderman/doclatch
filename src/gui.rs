@@ -146,6 +146,15 @@ struct Entry {
     signed: bool,
     /// Office-Dokumente: gefundene Schutzarten
     locks: Locks,
+    /// Beim Schützen angewandte Einstellungen (für die Details nach dem Schützen)
+    applied: Option<Applied>,
+}
+
+/// Was beim Schützen gesetzt wurde – nur Merkmale, keine Passwörter.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Applied {
+    open_password: bool,
+    permissions: Permissions,
 }
 
 impl Entry {
@@ -220,6 +229,8 @@ pub struct App {
     owner_pw: String,
     show_new_pw: bool,
     allowed: Permissions,
+    /// Einstellungen des laufenden Schutz-Auftrags (ohne Passwörter)
+    batch_applied: Option<Applied>,
     /// Passwörter des laufenden Schutz-Auftrags: (Öffnen, selbst gewähltes Rechte-Passwort)
     batch_pw: Option<(String, Option<String>)>,
     /// Geschützte Ergebnisse dieser Sitzung samt Passwörtern (für den Export)
@@ -274,6 +285,7 @@ impl App {
             owner_pw: String::new(),
             show_new_pw: false,
             allowed: ALL_PERMISSIONS,
+            batch_applied: None,
             batch_pw: None,
             pw_records: Vec::new(),
             pw_saved: None,
@@ -403,6 +415,7 @@ impl App {
                 permissions: None,
                 signed: false,
                 locks: Locks::default(),
+                applied: None,
             });
         }
         let _ = self.jobs.send(Job::Inspect(new.into_iter().map(|p| (p, false)).collect()));
@@ -442,6 +455,8 @@ impl App {
         }
         let cancel = Arc::new(AtomicBool::new(false));
         self.progress = Some(Progress { done: 0, total: files.len(), cancel: cancel.clone() });
+        self.batch_applied = (mode == Mode::Protect)
+            .then(|| Applied { open_password: !self.open_pw.is_empty(), permissions: self.allowed & ALL_PERMISSIONS });
         self.batch_pw = (mode == Mode::Protect)
             .then(|| (self.open_pw.clone(), Some(self.owner_pw.clone()).filter(|o| !o.is_empty())));
         let _ = self.jobs.send(Job::Process {
@@ -486,7 +501,11 @@ impl App {
                             self.pw_saved = None;
                         }
                     }
+                    let applied = self.batch_applied;
                     if let Some(e) = self.entry_mut(&p) {
+                        if matches!(st, Status::Done(_, Mode::Protect)) {
+                            e.applied = applied;
+                        }
                         e.status = st;
                     }
                 }
@@ -807,6 +826,8 @@ impl App {
                 for i in range {
                     let e = &self.entries[i];
                     let (rect, _) = ui.allocate_exact_size(Vec2::new(ui.available_width(), CARD_H), Sense::hover());
+                    // Über den kleinen Knöpfen gilt deren eigener Tooltip.
+                    let mut child_hover = false;
                     ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                         Frame::new()
                             .fill(pal.surface)
@@ -819,14 +840,18 @@ impl App {
                                     if !busy {
                                         let x = egui::Button::new(RichText::new("×").size(18.0).color(pal.muted))
                                             .frame(false);
-                                        if ui.add(x).on_hover_text(t.remove).clicked() {
+                                        let r = ui.add(x);
+                                        child_hover |= r.hovered();
+                                        if r.on_hover_text(t.remove).clicked() {
                                             remove = Some(i);
                                         }
                                     }
                                     // Datei im Dateimanager zeigen und markieren (Ergebnis, sonst Original)
                                     let folder =
                                         egui::Button::new(RichText::new("📂").size(15.0).color(pal.muted)).frame(false);
-                                    if ui.add(folder).on_hover_text(t.show_in_folder).clicked() {
+                                    let r = ui.add(folder);
+                                    child_hover |= r.hovered();
+                                    if r.on_hover_text(t.show_in_folder).clicked() {
                                         let done = match &e.status {
                                             Status::Done(out, _) => Some(out),
                                             _ => None,
@@ -834,30 +859,16 @@ impl App {
                                         crate::desktop::reveal(&crate::desktop::target_for(&e.path, done));
                                     }
                                     let b = badge(ui, pal, t, &e.status);
-                                    // Berechtigungen als Info beim Überfahren
-                                    if let Status::Ready(
-                                        pr @ (Protection::RestrictionsOnly | Protection::PasswordRequired),
-                                    ) = e.status
-                                    {
-                                        b.on_hover_cursor(egui::CursorIcon::Help).on_hover_ui(|ui| {
-                                            if e.is_office() {
-                                                locks_tooltip(ui, pal, t, e.locks, pr == Protection::PasswordRequired);
-                                                return;
-                                            }
-                                            perms_tooltip(
-                                                ui,
-                                                pal,
-                                                t,
-                                                e.permissions,
-                                                pr == Protection::PasswordRequired,
-                                            );
-                                        });
+                                    if has_details(e) {
+                                        b.on_hover_cursor(egui::CursorIcon::Help);
                                     }
                                     if matches!(e.status, Status::Large(_)) && !busy {
                                         let b = egui::Button::new(RichText::new(t.load_anyway).size(12.0))
                                             .fill(pal.surface_hi)
                                             .corner_radius(CornerRadius::same(8));
-                                        if ui.add(b).on_hover_text(t.load_anyway_tip).clicked() {
+                                        let r = ui.add(b);
+                                        child_hover |= r.hovered();
+                                        if r.on_hover_text(t.load_anyway_tip).clicked() {
                                             allow = Some(e.path.clone());
                                         }
                                     }
@@ -894,6 +905,13 @@ impl App {
                                 });
                             });
                     });
+                    // Die ganze Karte zeigt beim Überfahren (bzw. langem Drücken bei Touch) Details.
+                    // Erst nach dem Inhalt angemeldet, damit sie oben liegt; sie reagiert nur aufs
+                    // Überfahren, Klicks gehen weiter an die Knöpfe darunter.
+                    let card = ui.interact(rect, ui.scope_id().with(("card", i)), Sense::hover());
+                    if !child_hover && has_details(e) {
+                        card.on_hover_ui(|ui| entry_details(ui, pal, t, e));
+                    }
                 }
             },
         );
@@ -1602,6 +1620,86 @@ fn locks_tooltip(ui: &mut egui::Ui, pal: &Palette, t: &Strings, locks: Locks, en
     ui.label(RichText::new(t.unlock_removes_all).size(12.0).color(pal.muted));
 }
 
+/// Gibt es zu diesem Eintrag Details für den Tooltip?
+fn has_details(e: &Entry) -> bool {
+    matches!(
+        e.status,
+        Status::Ready(Protection::RestrictionsOnly | Protection::PasswordRequired)
+            | Status::Done(..)
+            | Status::Failed(_)
+            | Status::Large(_)
+    )
+}
+
+/// Details zu einer Datei: Schutz vorher, Ergebnis nachher, vollständige Fehlermeldung.
+fn entry_details(ui: &mut egui::Ui, pal: &Palette, t: &Strings, e: &Entry) {
+    ui.set_max_width(360.0);
+    let was_password = e.protection == Some(Protection::PasswordRequired);
+    match &e.status {
+        Status::Ready(Protection::RestrictionsOnly | Protection::PasswordRequired) => {
+            if e.is_office() {
+                locks_tooltip(ui, pal, t, e.locks, was_password);
+            } else {
+                perms_tooltip(ui, pal, t, e.permissions, was_password);
+            }
+        }
+        Status::Done(out, Mode::Protect) => {
+            ui.label(RichText::new(format!("🔒 {}", t.st_protected)).strong().color(pal.success));
+            if let Some(a) = e.applied {
+                ui.add_space(2.0);
+                let open = if a.open_password { t.needs_open_password } else { t.tip_opens_freely };
+                ui.label(RichText::new(open).color(pal.text));
+                ui.add_space(4.0);
+                ui.label(RichText::new(t.perms_title).strong().color(pal.text));
+                for (flag, name) in perm_list(t) {
+                    check_line(ui, pal, a.permissions.contains(flag), name);
+                }
+            }
+            ui.add_space(4.0);
+            ui.label(RichText::new(fill(t.saved_to, "path", out.display())).size(12.0).color(pal.muted));
+        }
+        Status::Done(out, Mode::Unlock) => {
+            ui.label(RichText::new(format!("🔓 {}", t.st_done)).strong().color(pal.success));
+            ui.add_space(2.0);
+            ui.label(RichText::new(t.tip_removed).color(pal.text));
+            let mut removed: Vec<&str> = Vec::new();
+            if was_password && !e.is_office() {
+                removed.push(t.open_password);
+            }
+            if e.is_office() {
+                removed.extend(e.locks.iter().map(|l| lock_name(t, l)));
+            } else if e.permissions.is_none_or(|p| !p.contains(ALL_PERMISSIONS)) {
+                removed.push(t.st_restricted);
+            }
+            for r in removed {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new("✖").color(pal.muted));
+                    ui.label(RichText::new(r).color(pal.text));
+                });
+            }
+            if !e.is_office() {
+                ui.label(RichText::new(t.tip_all_allowed).color(pal.success));
+            }
+            ui.add_space(4.0);
+            ui.label(RichText::new(fill(t.saved_to, "path", out.display())).size(12.0).color(pal.muted));
+        }
+        Status::Failed(f) => {
+            ui.label(RichText::new(f.text(t)).color(pal.error));
+        }
+        Status::Large(_) => {
+            ui.label(RichText::new(t.large_note).color(pal.warn));
+        }
+        _ => {}
+    }
+}
+
+fn check_line(ui: &mut egui::Ui, pal: &Palette, ok: bool, name: &str) {
+    ui.horizontal(|ui| {
+        ui.label(RichText::new(if ok { "✔" } else { "✖" }).color(if ok { pal.success } else { pal.error }));
+        ui.label(RichText::new(name).color(pal.text));
+    });
+}
+
 fn perms_tooltip(ui: &mut egui::Ui, pal: &Palette, t: &Strings, perms: Option<Permissions>, needs_open: bool) {
     ui.set_max_width(320.0);
     if needs_open {
@@ -1977,6 +2075,10 @@ mod tests {
         let Status::Done(out, Mode::Unlock) = &e.status else { panic!("{:?}", e.status) };
         assert!(out.to_string_lossy().ends_with("brief_unlocked.docx"));
         assert_eq!(core::inspect(out).unwrap().protection, Protection::None);
+        // Details nach dem Entsperren: entfernte Schutzarten
+        hover_entry(&mut h, "brief.docx");
+        h.get_by_label(EN.tip_removed);
+        h.get_by_label(EN.lock_editing);
         std::fs::remove_dir_all(dir).ok();
     }
 
@@ -2038,6 +2140,52 @@ mod tests {
         h.run_steps(2);
         assert!(!h.state().wide_footer, "Standardbreite: eigene Zeile für den Hauptknopf");
         assert!(y(&h, &knopf) - y(&h, EN.overwrite) > 20.0);
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    /// Fährt über den Dateinamen (nicht das Status-Feld) und wartet auf den Tooltip.
+    fn hover_entry(h: &mut Harness<'static, App>, name: &str) {
+        h.get_by_label(name).hover();
+        for _ in 0..90 {
+            h.step();
+        }
+    }
+
+    #[test]
+    fn details_beim_ueberfahren() {
+        let (dir, files) = make_pdfs("details", 2);
+        let mut h = harness(files);
+        wait(&mut h, checked);
+        // vorher: Berechtigungen
+        hover_entry(&mut h, "datei_0000.pdf");
+        h.get_by_label(EN.perms_title);
+
+        // nach dem Schützen: Ergebnis mit gesetzten Merkmalen
+        h.get_by_label(&format!("🔒  {}", EN.protect)).click();
+        h.run_steps(2);
+        h.state_mut().open_pw = "geheim".into();
+        h.state_mut().allowed = Permissions::PRINTABLE;
+        h.run_steps(2);
+        h.get_by_label(&format!("🔒  {}", fill(EN.protect_n, "n", 2))).click();
+        h.run_steps(1);
+        wait(&mut h, |a| a.progress.is_none());
+        assert!(
+            h.state()
+                .entries
+                .iter()
+                .all(|e| e.applied == Some(Applied { open_password: true, permissions: Permissions::PRINTABLE }))
+        );
+        hover_entry(&mut h, "datei_0001.pdf");
+        if std::env::var_os("DOCLATCH_SHOTS").is_some() {
+            let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/screenshots/tooltip_geschuetzt.png");
+            h.render().unwrap().save(out).unwrap();
+        }
+        h.get_by_label(EN.needs_open_password);
+        h.get_by_label(EN.perms_title);
+        // Knöpfe auf der Karte bleiben klickbar: × entfernt den Eintrag
+        h.query_all_by_label("×").next().unwrap().click();
+        h.run_steps(2);
+        assert_eq!(h.state().entries.len(), 1);
         std::fs::remove_dir_all(dir).ok();
     }
 
