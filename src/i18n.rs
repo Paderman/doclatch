@@ -211,6 +211,7 @@ strings!(
     lock_sections,
     lock_tracked,
     filter_all,
+    filter_office,
     filter_text,
     filter_sheets,
     filter_presentations,
@@ -356,6 +357,7 @@ pub static EN: Strings = Strings {
     tip_opens_freely: "Opens without a password; only the selected restrictions apply.",
     tip_removed: "Removed:",
     tip_all_allowed: "All actions are allowed now.",
+    filter_office: "Office files",
 };
 
 pub static DE: Strings = Strings {
@@ -484,6 +486,7 @@ pub static DE: Strings = Strings {
     tip_opens_freely: "Öffnet sich ohne Passwort; es gelten nur die gewählten Einschränkungen.",
     tip_removed: "Entfernt:",
     tip_all_allowed: "Alle Aktionen sind jetzt erlaubt.",
+    filter_office: "Office-Dateien",
 };
 
 pub static FR: Strings = Strings {
@@ -612,6 +615,7 @@ pub static FR: Strings = Strings {
     tip_opens_freely: "S’ouvre sans mot de passe ; seules les restrictions choisies s’appliquent.",
     tip_removed: "Supprimé :",
     tip_all_allowed: "Toutes les actions sont désormais autorisées.",
+    filter_office: "Fichiers Office",
 };
 
 pub static ES: Strings = Strings {
@@ -740,6 +744,7 @@ pub static ES: Strings = Strings {
     tip_opens_freely: "Se abre sin contraseña; solo se aplican las restricciones elegidas.",
     tip_removed: "Eliminado:",
     tip_all_allowed: "Ahora se permiten todas las acciones.",
+    filter_office: "Archivos de Office",
 };
 
 pub static IT: Strings = Strings {
@@ -868,6 +873,7 @@ pub static IT: Strings = Strings {
     tip_opens_freely: "Si apre senza password; valgono solo le restrizioni scelte.",
     tip_removed: "Rimosso:",
     tip_all_allowed: "Ora tutte le azioni sono consentite.",
+    filter_office: "File di Office",
 };
 
 pub static PT: Strings = Strings {
@@ -996,6 +1002,7 @@ pub static PT: Strings = Strings {
     tip_opens_freely: "Abre sem senha; apenas as restrições escolhidas se aplicam.",
     tip_removed: "Removido:",
     tip_all_allowed: "Agora todas as ações são permitidas.",
+    filter_office: "Arquivos do Office",
 };
 
 pub static NL: Strings = Strings {
@@ -1124,6 +1131,7 @@ pub static NL: Strings = Strings {
     tip_opens_freely: "Opent zonder wachtwoord; alleen de gekozen beperkingen gelden.",
     tip_removed: "Verwijderd:",
     tip_all_allowed: "Alle acties zijn nu toegestaan.",
+    filter_office: "Office-bestanden",
 };
 
 pub static PL: Strings = Strings {
@@ -1252,6 +1260,7 @@ pub static PL: Strings = Strings {
     tip_opens_freely: "Otwiera się bez hasła; obowiązują tylko wybrane ograniczenia.",
     tip_removed: "Usunięto:",
     tip_all_allowed: "Wszystkie działania są teraz dozwolone.",
+    filter_office: "Pliki Office",
 };
 
 pub static TR: Strings = Strings {
@@ -1380,6 +1389,7 @@ pub static TR: Strings = Strings {
     tip_opens_freely: "Parola olmadan açılır; yalnızca seçilen kısıtlamalar geçerlidir.",
     tip_removed: "Kaldırılanlar:",
     tip_all_allowed: "Artık tüm işlemlere izin veriliyor.",
+    filter_office: "Office dosyaları",
 };
 
 pub static RU: Strings = Strings {
@@ -1508,6 +1518,7 @@ pub static RU: Strings = Strings {
     tip_opens_freely: "Открывается без пароля; действуют только выбранные ограничения.",
     tip_removed: "Удалено:",
     tip_all_allowed: "Теперь разрешены все действия.",
+    filter_office: "Файлы Office",
 };
 
 pub static UK: Strings = Strings {
@@ -1636,6 +1647,7 @@ pub static UK: Strings = Strings {
     tip_opens_freely: "Відкривається без пароля; діють лише вибрані обмеження.",
     tip_removed: "Видалено:",
     tip_all_allowed: "Тепер дозволено всі дії.",
+    filter_office: "Файли Office",
 };
 
 #[cfg(test)]

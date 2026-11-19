@@ -1566,16 +1566,20 @@ const PW_BUTTON_W: f32 = 32.0;
 /// ebenfalls angenommen, stehen aber nicht in der Kurzliste).
 const DROP_EXTENSIONS: &str = "PDF, DOCX, XLSX, PPTX, ODT, ODS, ODP";
 
-/// Dateidialog mit Filtern nach Dokumentart; „Alle unterstützten Dateien“ ist der erste und damit
-/// voreingestellte Filter. Die Endungen stehen alphabetisch sortiert in Klammern.
+/// Dateidialog mit Filtern: alle unterstützten, PDF, alle Office-Dateien, dann je Dokumentart.
+/// „Alle unterstützten Dateien“ ist der erste und damit voreingestellte Filter. Die Endungen stehen alphabetisch sortiert in Klammern.
 fn file_dialog(t: &Strings) -> rfd::FileDialog {
     use crate::office::{CATEGORIES, Category};
     // Großschreibung für Dateisysteme, auf denen der Filter Groß-/Kleinschreibung unterscheidet
     let patterns = |v: &[&str]| v.iter().flat_map(|e| [e.to_string(), e.to_ascii_uppercase()]).collect::<Vec<_>>();
     let mut all = vec!["pdf"];
     all.extend(crate::office::extensions());
-    let mut dialog =
-        rfd::FileDialog::new().add_filter(t.filter_all, &patterns(&all)).add_filter("PDF (pdf)", &patterns(&["pdf"]));
+    let office: Vec<&str> = crate::office::extensions().collect();
+    let mut dialog = rfd::FileDialog::new()
+        .add_filter(t.filter_all, &patterns(&all))
+        .add_filter("PDF (pdf)", &patterns(&["pdf"]))
+        // alle Office-Typen zusammen; im Namen nur die gängigsten Endungen
+        .add_filter(format!("{} (docx, xlsx, pptx, odt, ods, odp, …)", t.filter_office), &patterns(&office));
     for (cat, exts) in CATEGORIES {
         let name = match cat {
             Category::Text => t.filter_text,
