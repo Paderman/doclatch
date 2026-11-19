@@ -232,7 +232,7 @@ strings!(
 );
 
 pub static EN: Strings = Strings {
-    subtitle: "Remove or add PDF password protection, remove Office editing protection – locally, no upload",
+    subtitle: "Remove or add PDF password protection, unlock Office documents – locally, no upload",
     drop_title: "Drop PDF or Office files here or click to choose",
     drop_release: "Release to add",
     drop_hint: "Multiple files supported",
@@ -330,7 +330,7 @@ pub static EN: Strings = Strings {
     auto_check: "Check automatically at startup (at most once a day)",
     update_privacy: "Only the latest version number is requested from GitHub. No personal data or file contents are sent. Nothing is downloaded or installed automatically.",
     err_document: "Document error: {e}",
-    err_office_encrypted: "Password-encrypted Office files are not supported yet",
+    err_office_encrypted: "This Office encryption method is not supported",
     err_office_protect: "Protection is available for PDF files only",
     locks_title: "Protection found:",
     lock_editing: "Editing restricted",
@@ -361,7 +361,7 @@ pub static EN: Strings = Strings {
 };
 
 pub static DE: Strings = Strings {
-    subtitle: "PDF-Passwortschutz entfernen oder hinzufügen, Office-Bearbeitungsschutz entfernen – lokal, ohne Upload",
+    subtitle: "PDF-Passwortschutz entfernen oder hinzufügen, Office-Dokumente entsperren – lokal, ohne Upload",
     drop_title: "PDF- oder Office-Dateien hierher ziehen oder zum Auswählen klicken",
     drop_release: "Loslassen zum Hinzufügen",
     drop_hint: "Mehrere Dateien möglich",
@@ -459,7 +459,7 @@ pub static DE: Strings = Strings {
     auto_check: "Beim Start automatisch prüfen (höchstens einmal täglich)",
     update_privacy: "Dabei wird nur die neueste Versionsnummer bei GitHub abgefragt. Es werden keine persönlichen Daten oder Dateiinhalte gesendet. Nichts wird automatisch heruntergeladen oder installiert.",
     err_document: "Dokumentfehler: {e}",
-    err_office_encrypted: "Passwortverschlüsselte Office-Dateien werden noch nicht unterstützt",
+    err_office_encrypted: "Dieses Office-Verschlüsselungsverfahren wird nicht unterstützt",
     err_office_protect: "Schützen ist nur für PDF-Dateien verfügbar",
     locks_title: "Gefundener Schutz:",
     lock_editing: "Bearbeitung eingeschränkt",
@@ -490,7 +490,7 @@ pub static DE: Strings = Strings {
 };
 
 pub static FR: Strings = Strings {
-    subtitle: "Supprimer ou ajouter une protection par mot de passe aux PDF, supprimer la protection en écriture Office – en local, sans envoi",
+    subtitle: "Supprimer ou ajouter une protection par mot de passe aux PDF, déverrouiller les documents Office – en local, sans envoi",
     drop_title: "Déposez des fichiers PDF ou Office ici ou cliquez pour choisir",
     drop_release: "Relâchez pour ajouter",
     drop_hint: "Plusieurs fichiers possibles",
@@ -588,7 +588,7 @@ pub static FR: Strings = Strings {
     auto_check: "Vérifier automatiquement au démarrage (au plus une fois par jour)",
     update_privacy: "Seul le dernier numéro de version est demandé à GitHub. Aucune donnée personnelle ni aucun contenu de fichier n’est envoyé. Rien n’est téléchargé ni installé automatiquement.",
     err_document: "Erreur de document : {e}",
-    err_office_encrypted: "Les fichiers Office chiffrés par mot de passe ne sont pas encore pris en charge",
+    err_office_encrypted: "Cette méthode de chiffrement Office n’est pas prise en charge",
     err_office_protect: "La protection n’est disponible que pour les fichiers PDF",
     locks_title: "Protection détectée :",
     lock_editing: "Modification restreinte",
@@ -619,7 +619,7 @@ pub static FR: Strings = Strings {
 };
 
 pub static ES: Strings = Strings {
-    subtitle: "Quitar o añadir protección con contraseña a PDF, quitar la protección de edición de Office – en local, sin subir nada",
+    subtitle: "Quitar o añadir protección con contraseña a PDF, desbloquear documentos de Office – en local, sin subir nada",
     drop_title: "Arrastra archivos PDF u Office aquí o haz clic para elegir",
     drop_release: "Suelta para añadir",
     drop_hint: "Se admiten varios archivos",
@@ -717,7 +717,7 @@ pub static ES: Strings = Strings {
     auto_check: "Comprobar automáticamente al iniciar (como máximo una vez al día)",
     update_privacy: "Solo se consulta a GitHub el número de la última versión. No se envían datos personales ni contenido de archivos. No se descarga ni instala nada automáticamente.",
     err_document: "Error de documento: {e}",
-    err_office_encrypted: "Los archivos de Office cifrados con contraseña aún no son compatibles",
+    err_office_encrypted: "Este método de cifrado de Office no es compatible",
     err_office_protect: "La protección solo está disponible para archivos PDF",
     locks_title: "Protección encontrada:",
     lock_editing: "Edición restringida",
@@ -748,7 +748,7 @@ pub static ES: Strings = Strings {
 };
 
 pub static IT: Strings = Strings {
-    subtitle: "Rimuovi o aggiungi la protezione con password ai PDF, rimuovi la protezione da modifica di Office – in locale, senza caricamenti",
+    subtitle: "Rimuovere o aggiungere la protezione con password ai PDF, sbloccare i documenti Office – in locale, senza caricamenti",
     drop_title: "Trascina qui file PDF o Office o fai clic per sceglierli",
     drop_release: "Rilascia per aggiungere",
     drop_hint: "Sono supportati più file",
@@ -846,7 +846,7 @@ pub static IT: Strings = Strings {
     auto_check: "Controlla automaticamente all’avvio (al massimo una volta al giorno)",
     update_privacy: "Viene richiesto a GitHub solo il numero dell’ultima versione. Non vengono inviati dati personali né contenuti dei file. Nulla viene scaricato o installato automaticamente.",
     err_document: "Errore del documento: {e}",
-    err_office_encrypted: "I file Office crittografati con password non sono ancora supportati",
+    err_office_encrypted: "Questo metodo di crittografia di Office non è supportato",
     err_office_protect: "La protezione è disponibile solo per i file PDF",
     locks_title: "Protezione rilevata:",
     lock_editing: "Modifica limitata",
@@ -877,7 +877,7 @@ pub static IT: Strings = Strings {
 };
 
 pub static PT: Strings = Strings {
-    subtitle: "Remover ou adicionar proteção por senha em PDFs, remover a proteção de edição do Office – localmente, sem envio",
+    subtitle: "Remover ou adicionar proteção por senha em PDFs, desbloquear documentos do Office – localmente, sem envio",
     drop_title: "Arraste arquivos PDF ou Office para cá ou clique para escolher",
     drop_release: "Solte para adicionar",
     drop_hint: "Vários arquivos são suportados",
@@ -975,7 +975,7 @@ pub static PT: Strings = Strings {
     auto_check: "Verificar automaticamente ao iniciar (no máximo uma vez por dia)",
     update_privacy: "Apenas o número da versão mais recente é consultado no GitHub. Nenhum dado pessoal ou conteúdo de arquivo é enviado. Nada é baixado ou instalado automaticamente.",
     err_document: "Erro no documento: {e}",
-    err_office_encrypted: "Arquivos do Office criptografados com senha ainda não são suportados",
+    err_office_encrypted: "Este método de criptografia do Office não é suportado",
     err_office_protect: "A proteção está disponível apenas para arquivos PDF",
     locks_title: "Proteção encontrada:",
     lock_editing: "Edição restrita",
@@ -1006,7 +1006,7 @@ pub static PT: Strings = Strings {
 };
 
 pub static NL: Strings = Strings {
-    subtitle: "Wachtwoordbeveiliging van pdf’s verwijderen of toevoegen, Office-bewerkingsbeveiliging verwijderen – lokaal, zonder upload",
+    subtitle: "Wachtwoordbeveiliging van pdf’s verwijderen of toevoegen, Office-documenten ontgrendelen – lokaal, zonder upload",
     drop_title: "Sleep pdf- of Office-bestanden hierheen of klik om te kiezen",
     drop_release: "Loslaten om toe te voegen",
     drop_hint: "Meerdere bestanden mogelijk",
@@ -1104,7 +1104,7 @@ pub static NL: Strings = Strings {
     auto_check: "Automatisch controleren bij het starten (hooguit één keer per dag)",
     update_privacy: "Er wordt alleen het nieuwste versienummer bij GitHub opgevraagd. Er worden geen persoonsgegevens of bestandsinhoud verzonden. Er wordt niets automatisch gedownload of geïnstalleerd.",
     err_document: "Documentfout: {e}",
-    err_office_encrypted: "Met een wachtwoord versleutelde Office-bestanden worden nog niet ondersteund",
+    err_office_encrypted: "Deze Office-versleutelingsmethode wordt niet ondersteund",
     err_office_protect: "Beveiligen is alleen beschikbaar voor pdf-bestanden",
     locks_title: "Gevonden beveiliging:",
     lock_editing: "Bewerken beperkt",
@@ -1135,7 +1135,7 @@ pub static NL: Strings = Strings {
 };
 
 pub static PL: Strings = Strings {
-    subtitle: "Usuń lub dodaj ochronę hasłem plików PDF, usuń ochronę edycji dokumentów Office – lokalnie, bez wysyłania",
+    subtitle: "Usuwanie lub dodawanie ochrony hasłem plików PDF, odblokowywanie dokumentów Office – lokalnie, bez wysyłania",
     drop_title: "Przeciągnij tutaj pliki PDF lub Office albo kliknij, aby wybrać",
     drop_release: "Upuść, aby dodać",
     drop_hint: "Można dodać wiele plików",
@@ -1233,7 +1233,7 @@ pub static PL: Strings = Strings {
     auto_check: "Sprawdzaj automatycznie przy uruchomieniu (najwyżej raz dziennie)",
     update_privacy: "Z GitHuba pobierany jest tylko numer najnowszej wersji. Nie są wysyłane żadne dane osobowe ani zawartość plików. Nic nie jest automatycznie pobierane ani instalowane.",
     err_document: "Błąd dokumentu: {e}",
-    err_office_encrypted: "Pliki Office zaszyfrowane hasłem nie są jeszcze obsługiwane",
+    err_office_encrypted: "Ta metoda szyfrowania plików Office nie jest obsługiwana",
     err_office_protect: "Ochrona jest dostępna tylko dla plików PDF",
     locks_title: "Wykryta ochrona:",
     lock_editing: "Ograniczona edycja",
@@ -1264,7 +1264,7 @@ pub static PL: Strings = Strings {
 };
 
 pub static TR: Strings = Strings {
-    subtitle: "PDF parola korumasını kaldırın veya ekleyin, Office düzenleme korumasını kaldırın – yerel olarak, yükleme yok",
+    subtitle: "PDF parola korumasını kaldırma veya ekleme, Office belgelerinin kilidini açma – yerel olarak, yükleme yok",
     drop_title: "PDF veya Office dosyalarını buraya sürükleyin ya da seçmek için tıklayın",
     drop_release: "Eklemek için bırakın",
     drop_hint: "Birden fazla dosya desteklenir",
@@ -1362,7 +1362,7 @@ pub static TR: Strings = Strings {
     auto_check: "Başlangıçta otomatik denetle (günde en fazla bir kez)",
     update_privacy: "GitHub'dan yalnızca en son sürüm numarası sorgulanır. Kişisel veri veya dosya içeriği gönderilmez. Hiçbir şey otomatik olarak indirilmez veya yüklenmez.",
     err_document: "Belge hatası: {e}",
-    err_office_encrypted: "Parolayla şifrelenmiş Office dosyaları henüz desteklenmiyor",
+    err_office_encrypted: "Bu Office şifreleme yöntemi desteklenmiyor",
     err_office_protect: "Koruma yalnızca PDF dosyaları için kullanılabilir",
     locks_title: "Bulunan koruma:",
     lock_editing: "Düzenleme kısıtlı",
@@ -1393,7 +1393,7 @@ pub static TR: Strings = Strings {
 };
 
 pub static RU: Strings = Strings {
-    subtitle: "Снятие или установка защиты PDF паролем, снятие защиты от редактирования Office – локально, без загрузки",
+    subtitle: "Снятие или установка защиты PDF паролем, разблокировка документов Office – локально, без загрузки",
     drop_title: "Перетащите файлы PDF или Office сюда или нажмите, чтобы выбрать",
     drop_release: "Отпустите, чтобы добавить",
     drop_hint: "Можно добавить несколько файлов",
@@ -1491,7 +1491,7 @@ pub static RU: Strings = Strings {
     auto_check: "Проверять автоматически при запуске (не чаще раза в день)",
     update_privacy: "У GitHub запрашивается только номер последней версии. Персональные данные и содержимое файлов не передаются. Ничего не скачивается и не устанавливается автоматически.",
     err_document: "Ошибка документа: {e}",
-    err_office_encrypted: "Зашифрованные паролем файлы Office пока не поддерживаются",
+    err_office_encrypted: "Этот метод шифрования Office не поддерживается",
     err_office_protect: "Защита доступна только для файлов PDF",
     locks_title: "Обнаруженная защита:",
     lock_editing: "Редактирование ограничено",
@@ -1522,7 +1522,7 @@ pub static RU: Strings = Strings {
 };
 
 pub static UK: Strings = Strings {
-    subtitle: "Зняття або встановлення захисту PDF паролем, зняття захисту від редагування Office – локально, без завантаження",
+    subtitle: "Зняття або встановлення захисту PDF паролем, розблокування документів Office – локально, без завантаження",
     drop_title: "Перетягніть файли PDF або Office сюди або натисніть, щоб вибрати",
     drop_release: "Відпустіть, щоб додати",
     drop_hint: "Можна додати кілька файлів",
@@ -1620,7 +1620,7 @@ pub static UK: Strings = Strings {
     auto_check: "Перевіряти автоматично під час запуску (не частіше ніж раз на день)",
     update_privacy: "У GitHub запитується лише номер найновішої версії. Персональні дані та вміст файлів не надсилаються. Нічого не завантажується й не встановлюється автоматично.",
     err_document: "Помилка документа: {e}",
-    err_office_encrypted: "Зашифровані паролем файли Office поки не підтримуються",
+    err_office_encrypted: "Цей метод шифрування Office не підтримується",
     err_office_protect: "Захист доступний лише для файлів PDF",
     locks_title: "Виявлений захист:",
     lock_editing: "Редагування обмежено",

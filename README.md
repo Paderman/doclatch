@@ -23,8 +23,13 @@ and from OpenDocument files (`.odt`, `.ods`, `.odp`, `.odg` and templates):
 editing restrictions, sheet and workbook structure protection, protected sections,
 protected change tracking, “password to modify” and the read-only recommendation.
 This protection is not encryption, so no password is needed; only the protection entries are removed,
-all other parts of the file stay byte-for-byte unchanged. Password-encrypted Office files are
-recognised but not decrypted yet. Protecting is available for PDF files only.
+all other parts of the file stay byte-for-byte unchanged.
+
+Password-encrypted Office files are decrypted when the password is known (any remaining editing
+protection is removed in the same step): Word, Excel and PowerPoint with “Standard” (AES, Office 2007,
+LibreOffice) or “Agile” encryption (Office 2010 and later), OpenDocument with AES-256-GCM/Argon2id
+(LibreOffice 24.2 and later) or AES-256-CBC/PBKDF2. Older methods (RC4 in `.doc`/`.xls`, Blowfish in
+OpenOffice 2) are not supported. Protecting is available for PDF files only.
 
 User interface in 11 languages (English by default, German, French, Spanish, Italian, Portuguese,
 Dutch, Polish, Turkish, Russian, Ukrainian), theme Auto/Dark/Light. The translations were created

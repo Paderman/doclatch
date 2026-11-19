@@ -25,8 +25,14 @@ OpenDocument-Dateien (`.odt`, `.ods`, `.odp`, `.odg` und Vorlagen) entfernt:
 eingeschränkte Bearbeitung, Blatt- und Arbeitsmappenschutz, geschützte Bereiche,
 geschützte Änderungsverfolgung, „Kennwort zum Ändern“ und die Empfehlung, schreibgeschützt zu öffnen.
 Dieser Schutz ist keine Verschlüsselung, daher ist kein Passwort nötig; entfernt werden nur die
-Schutz-Einträge, alle übrigen Teile der Datei bleiben byte-genau erhalten. Mit Passwort verschlüsselte
-Office-Dateien werden erkannt, aber noch nicht entschlüsselt. Schützen ist nur für PDF-Dateien verfügbar.
+Schutz-Einträge, alle übrigen Teile der Datei bleiben byte-genau erhalten.
+
+Mit Passwort verschlüsselte Office-Dateien werden bei bekanntem Passwort entschlüsselt (ein
+zusätzlicher Bearbeitungsschutz wird dabei gleich mit entfernt): Word, Excel und PowerPoint mit
+„Standard“- (AES, Office 2007, LibreOffice) oder „Agile“-Verschlüsselung (Office 2010 und neuer),
+OpenDocument mit AES-256-GCM/Argon2id (LibreOffice ab 24.2) oder AES-256-CBC/PBKDF2. Ältere Verfahren
+(RC4 in `.doc`/`.xls`, Blowfish aus OpenOffice 2) werden nicht unterstützt. Schützen ist nur für
+PDF-Dateien verfügbar.
 
 Oberfläche in 11 Sprachen (Englisch als Standard, Deutsch, Französisch, Spanisch, Italienisch, Portugiesisch,
 Niederländisch, Polnisch, Türkisch, Russisch, Ukrainisch), Theme Auto/Dunkel/Hell. Die Übersetzungen

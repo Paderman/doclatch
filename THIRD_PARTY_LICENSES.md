@@ -1,6 +1,6 @@
 # Lizenzen von Drittanbieter-Bibliotheken
 
-Doclatch verwendet 325 Rust-Bibliotheken (Crates), davon 10 direkt (eframe, egui, getrandom, lopdf, quick-xml, rfd, sys-locale, wgpu, windows-sys, zip). Die Liste umfasst alle Zielplattformen (Linux, Windows, macOS).
+Doclatch verwendet 341 Rust-Bibliotheken (Crates), davon 20 direkt (aes, aes-gcm, argon2, base64ct, cfb, eframe, egui, flate2, getrandom, hmac, lopdf, pbkdf2, quick-xml, rfd, sha1, sha2, sys-locale, wgpu, windows-sys, zip). Die Liste umfasst alle Zielplattformen (Linux, Windows, macOS).
 
 Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 
@@ -8,9 +8,9 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 
 | Anzahl | Lizenz (SPDX) |
 |---:|---|
-| 161 | `MIT OR Apache-2.0` |
-| 59 | `MIT` |
-| 28 | `Apache-2.0 OR MIT` |
+| 169 | `MIT OR Apache-2.0` |
+| 60 | `MIT` |
+| 34 | `Apache-2.0 OR MIT` |
 | 15 | `MIT/Apache-2.0` |
 | 10 | `Apache-2.0` |
 | 9 | `Zlib OR Apache-2.0 OR MIT` |
@@ -33,6 +33,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | 1 | `Apache-2.0 AND MIT` |
 | 1 | `(Apache-2.0 OR MIT) AND BSD-3-Clause` |
 | 1 | `(MIT OR Apache-2.0) AND OFL-1.1 AND Ubuntu-font-1.0` |
+| 1 | `Apache-2.0 / MIT` |
 | 1 | `ISC` |
 | 1 | `MIT OR Apache-2.0 OR LGPL-2.1-or-later` |
 | 1 | `Apache-2.0/MIT` |
@@ -44,7 +45,9 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 |---|---|---|---|
 | accesskit | 0.25.2 | `MIT OR Apache-2.0` | https://github.com/AccessKit/accesskit |
 | adler2 | 2.0.1 | `0BSD OR MIT OR Apache-2.0` | https://github.com/oyvindln/adler2 |
-| aes | 0.9.4 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/block-ciphers |
+| aead | 0.6.1 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/traits |
+| **aes** | 0.9.4 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/block-ciphers |
+| **aes-gcm** | 0.11.1 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/AEADs |
 | ahash | 0.8.12 | `MIT OR Apache-2.0` | https://github.com/tkaitchuck/ahash |
 | alloc-no-stdlib | 2.0.4 | `BSD-3-Clause` | https://github.com/dropbox/rust-alloc-no-stdlib |
 | alloc-stdlib | 0.2.4 | `BSD-3-Clause` | https://github.com/dropbox/rust-alloc-no-stdlib |
@@ -52,14 +55,17 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | android-activity | 0.6.1 | `MIT OR Apache-2.0` | https://github.com/rust-mobile/android-activity |
 | android-properties | 0.2.2 | `MIT` | https://github.com/miklelappo/android-properties |
 | arboard | 3.7.0 | `MIT OR Apache-2.0` | https://github.com/1Password/arboard |
+| **argon2** | 0.6.0 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/password-hashes |
 | arrayvec | 0.7.8 | `MIT OR Apache-2.0` | https://github.com/bluss/arrayvec |
 | as-raw-xcb-connection | 1.0.1 | `MIT OR Apache-2.0` | https://github.com/psychon/as-raw-xcb-connection |
 | atomic-waker | 1.1.2 | `Apache-2.0 OR MIT` | https://github.com/smol-rs/atomic-waker |
 | autocfg | 1.5.1 | `Apache-2.0 OR MIT` | https://github.com/cuviper/autocfg |
+| **base64ct** | 1.8.3 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/formats |
 | bit-set | 0.10.0 | `Apache-2.0 OR MIT` | https://github.com/contain-rs/bit-set |
 | bit-vec | 0.9.1 | `Apache-2.0 OR MIT` | https://github.com/contain-rs/bit-vec |
 | bitflags | 1.3.2 | `MIT/Apache-2.0` | https://github.com/bitflags/bitflags |
 | bitflags | 2.13.2 | `MIT OR Apache-2.0` | https://github.com/bitflags/bitflags |
+| blake2 | 0.11.0 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/hashes |
 | block-buffer | 0.12.1 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/utils |
 | block-padding | 0.4.2 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/utils |
 | block2 | 0.5.1 | `MIT` | https://github.com/madsmtm/objc2 |
@@ -75,12 +81,14 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | calloop-wayland-source | 0.4.1 | `MIT` | https://github.com/smithay/calloop-wayland-source |
 | cbc | 0.2.1 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/block-modes |
 | cc | 1.11.2 | `MIT OR Apache-2.0` | https://github.com/rust-lang/cc-rs |
+| **cfb** | 0.16.0 | `MIT` | https://github.com/mdsteele/rust-cfb |
 | cfg-if | 1.0.5 | `MIT OR Apache-2.0` | https://github.com/rust-lang/cfg-if |
 | cfg_aliases | 0.2.2 | `MIT` | https://github.com/katharostech/cfg_aliases |
 | cgl | 0.3.2 | `MIT / Apache-2.0` | https://github.com/servo/cgl-rs |
 | chacha20 | 0.10.2 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/stream-ciphers |
 | cipher | 0.5.2 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/traits |
 | clipboard-win | 5.4.3 | `BSL-1.0` | https://github.com/DoumanAsh/clipboard-win |
+| cmov | 0.5.4 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/utils |
 | codespan-reporting | 0.13.1 | `Apache-2.0` | https://github.com/brendanzab/codespan |
 | color | 0.3.3 | `Apache-2.0 OR MIT` | https://github.com/linebender/color |
 | combine | 4.6.9 | `MIT` | https://github.com/Marwes/combine |
@@ -98,6 +106,8 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | crossbeam-utils | 0.8.23 | `MIT OR Apache-2.0` | https://github.com/crossbeam-rs/crossbeam |
 | crunchy | 0.2.4 | `MIT` | https://github.com/eira-fransham/crunchy |
 | crypto-common | 0.2.2 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/traits |
+| ctr | 0.10.1 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/block-modes |
+| ctutils | 0.4.8 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/utils |
 | cursor-icon | 1.2.0 | `MIT OR Apache-2.0 OR Zlib` | https://github.com/rust-windowing/cursor-icon |
 | digest | 0.11.3 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/traits |
 | dispatch | 0.2.0 | `MIT` | http://github.com/SSheldon/rust-dispatch |
@@ -126,7 +136,8 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | fdeflate | 0.3.7 | `MIT OR Apache-2.0` | https://github.com/image-rs/fdeflate |
 | fearless_simd | 0.4.1 | `Apache-2.0 OR MIT` | https://github.com/linebender/fearless_simd |
 | find-msvc-tools | 0.1.15 | `MIT OR Apache-2.0` | https://github.com/rust-lang/cc-rs |
-| flate2 | 1.1.11 | `MIT OR Apache-2.0` | https://github.com/rust-lang/flate2-rs |
+| **flate2** | 1.1.11 | `MIT OR Apache-2.0` | https://github.com/rust-lang/flate2-rs |
+| fnv | 1.0.7 | `Apache-2.0 / MIT` | https://github.com/servo/rust-fnv |
 | foldhash | 0.2.0 | `Zlib` | https://github.com/orlp/foldhash |
 | font-types | 0.12.7 | `MIT OR Apache-2.0` | https://github.com/googlefonts/fontations |
 | foreign-types | 0.5.0 | `MIT/Apache-2.0` | https://github.com/sfackler/foreign-types |
@@ -137,6 +148,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | futures-util | 0.3.34 | `MIT OR Apache-2.0` | https://github.com/rust-lang/futures-rs |
 | gethostname | 1.1.0 | `Apache-2.0` | https://codeberg.org/swsnr/gethostname.rs.git |
 | **getrandom** | 0.4.3 | `MIT OR Apache-2.0` | https://github.com/rust-random/getrandom |
+| ghash | 0.6.0 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/universal-hashes |
 | gl_generator | 0.14.0 | `Apache-2.0` | https://github.com/brendanzab/gl-rs/ |
 | glow | 0.17.0 | `MIT OR Apache-2.0 OR Zlib` | https://github.com/grovesNL/glow |
 | glutin | 0.32.3 | `Apache-2.0` | https://github.com/rust-windowing/glutin |
@@ -151,6 +163,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | hashbrown | 0.16.1 | `MIT OR Apache-2.0` | https://github.com/rust-lang/hashbrown |
 | hashbrown | 0.17.1 | `MIT OR Apache-2.0` | https://github.com/rust-lang/hashbrown |
 | hermit-abi | 0.5.3 | `MIT OR Apache-2.0` | https://github.com/hermit-os/hermit-rs |
+| **hmac** | 0.13.0 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/MACs |
 | hybrid-array | 0.4.15 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/hybrid-array |
 | image | 0.25.10 | `MIT OR Apache-2.0` | https://github.com/image-rs/image |
 | indexmap | 2.14.2 | `Apache-2.0 OR MIT` | https://github.com/indexmap-rs/indexmap |
@@ -213,6 +226,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | ordered-float | 5.5.1 | `MIT` | https://github.com/reem/rust-ordered-float |
 | parking_lot | 0.12.5 | `MIT OR Apache-2.0` | https://github.com/Amanieu/parking_lot |
 | parking_lot_core | 0.9.12 | `MIT OR Apache-2.0` | https://github.com/Amanieu/parking_lot |
+| **pbkdf2** | 0.13.0 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/password-hashes |
 | peniko | 0.6.1 | `Apache-2.0 OR MIT` | https://github.com/linebender/peniko |
 | percent-encoding | 2.3.2 | `MIT OR Apache-2.0` | https://github.com/servo/rust-url/ |
 | pin-project | 1.1.13 | `Apache-2.0 OR MIT` | https://github.com/taiki-e/pin-project |
@@ -224,6 +238,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | polling | 3.11.0 | `Apache-2.0 OR MIT` | https://github.com/smol-rs/polling |
 | pollster | 1.0.2 | `MIT OR Apache-2.0` | https://github.com/zesterer/pollster |
 | polycool | 0.4.0 | `MIT OR Apache-2.0` | https://github.com/linebender/kurbo |
+| polyval | 0.7.3 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/universal-hashes |
 | portable-atomic | 1.15.0 | `Apache-2.0 OR MIT` | https://github.com/taiki-e/portable-atomic |
 | portable-atomic-util | 0.2.8 | `Apache-2.0 OR MIT` | https://github.com/taiki-e/portable-atomic-util |
 | presser | 0.3.1 | `MIT OR Apache-2.0` | https://github.com/EmbarkStudios/presser |
@@ -258,7 +273,8 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | self_cell | 1.3.0 | `Apache-2.0 OR GPL-2.0-only` | https://github.com/Voultapher/self_cell |
 | semver | 1.0.28 | `MIT OR Apache-2.0` | https://github.com/dtolnay/semver |
 | send_wrapper | 0.6.0 | `MIT/Apache-2.0` | https://github.com/thk1/send_wrapper |
-| sha2 | 0.11.1 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/hashes |
+| **sha1** | 0.11.0 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/hashes |
+| **sha2** | 0.11.1 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/hashes |
 | shlex | 2.0.1 | `MIT OR Apache-2.0` | https://github.com/comex/rust-shlex |
 | simd-adler32 | 0.3.10 | `MIT` | https://github.com/mcountryman/simd-adler32 |
 | simd_cesu8 | 1.2.0 | `Apache-2.0 OR MIT` | https://github.com/seancroach/simd_cesu8 |
@@ -297,6 +313,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | unicode-properties | 0.1.5 | `(MIT OR Apache-2.0) AND Unicode-3.0` | https://github.com/unicode-rs/unicode-properties |
 | unicode-segmentation | 1.13.3 | `MIT OR Apache-2.0` | https://github.com/unicode-rs/unicode-segmentation |
 | unicode-width | 0.2.3 | `MIT OR Apache-2.0` | https://github.com/unicode-rs/unicode-width |
+| universal-hash | 0.6.1 | `MIT OR Apache-2.0` | https://github.com/RustCrypto/traits |
 | uuid | 1.29.3 | `Apache-2.0 OR MIT` | https://github.com/uuid-rs/uuid |
 | vello_common | 0.2.0 | `Apache-2.0 OR MIT` | https://github.com/linebender/vello |
 | vello_cpu | 0.2.0 | `Apache-2.0 OR MIT` | https://github.com/linebender/vello |

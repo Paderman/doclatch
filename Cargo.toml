@@ -5,12 +5,17 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Paderman/doclatch"
 homepage = "https://github.com/Paderman/doclatch"
-description = "Removes or adds password protection and restrictions for PDF files and removes editing protection from Office documents – graphical interface and command line"
+description = "Removes or adds password protection and restrictions for PDF files and decrypts or removes editing protection from Office documents – graphical interface and command line"
 readme = "README.md"
 keywords = ["pdf", "docx", "xlsx", "unlock", "password"]
 categories = ["command-line-utilities", "gui"]
 
 [dependencies]
+aes = "0.9"
+aes-gcm = { version = "0.11", default-features = false, features = ["aes", "alloc"] }
+argon2 = { version = "0.6", default-features = false, features = ["alloc"] }
+base64ct = { version = "1", features = ["alloc"] }
+cfb = "0.16"
 # Schlanke Auswahl: OpenGL-Backend (glow) statt wgpu, unter Linux nur X11.
 # X11 ist unter Linux nötig, weil winit 0.30 Drag & Drop nur dort unterstützt
 # (unter Wayland-Desktops läuft die App automatisch über XWayland).
@@ -22,10 +27,15 @@ eframe = { version = "0.37", default-features = false, features = [
 ] }
 # Eingebaute Symbol-/Emoji-Schriften (🔓 📄 ✔ …) – unabhängig von Systemschriften.
 egui = { version = "0.37", default-features = false, features = ["monochrome_emoji_fonts"] }
+flate2 = "1"
 getrandom = "0.4"
+hmac = "0.13"
 lopdf = { version = "0.47", default-features = false } # ohne rayon/chrono
+pbkdf2 = { version = "0.13", default-features = false, features = ["hmac"] }
 quick-xml = { version = "0.41", default-features = false }
 rfd = { version = "0.18", default-features = false, features = ["xdg-portal"] }
+sha1 = "0.11"
+sha2 = "0.11"
 sys-locale = "0.3"
 zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 
@@ -69,7 +79,7 @@ section = "utils"
 priority = "optional"
 depends = "libc6 (>= 2.28)"
 recommends = "xdg-desktop-portal"
-extended-description = "Graphical and command-line tool that removes password protection and permission restrictions from PDF files and removes editing, sheet and structure protection from Office documents (OOXML and ODF). Runs entirely locally."
+extended-description = "Graphical and command-line tool that removes password protection and permission restrictions from PDF files and decrypts Office documents with a known password or removes their editing, sheet and structure protection (OOXML and ODF). Runs entirely locally."
 assets = [
     ["target/release/doclatch", "usr/bin/", "755"],
     ["packaging/doclatch.desktop", "usr/share/applications/", "644"],

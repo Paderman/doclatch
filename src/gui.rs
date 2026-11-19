@@ -531,8 +531,7 @@ impl App {
     /// Passwortfeld nur zeigen, wenn eine Datei wirklich eins zum Öffnen braucht.
     fn needs_password(&self) -> bool {
         self.entries.iter().any(|e| match &e.status {
-            // Verschlüsselte Office-Dateien werden (noch) nicht entschlüsselt – Passwort nützt nichts.
-            Status::Ready(Protection::PasswordRequired) => !e.is_office(),
+            Status::Ready(Protection::PasswordRequired) => true,
             Status::Failed(f) => f.needs_password(),
             _ => false,
         })
@@ -1609,8 +1608,6 @@ fn locks_tooltip(ui: &mut egui::Ui, pal: &Palette, t: &Strings, locks: Locks, en
     ui.set_max_width(320.0);
     if encrypted {
         ui.label(RichText::new(format!("🔒 {}", t.needs_open_password)).color(pal.warn));
-        ui.add_space(4.0);
-        ui.label(RichText::new(t.err_office_encrypted).size(12.0).color(pal.muted));
         return;
     }
     ui.label(RichText::new(t.locks_title).strong().color(pal.text));
@@ -1667,7 +1664,7 @@ fn entry_details(ui: &mut egui::Ui, pal: &Palette, t: &Strings, e: &Entry) {
             ui.add_space(2.0);
             ui.label(RichText::new(t.tip_removed).color(pal.text));
             let mut removed: Vec<&str> = Vec::new();
-            if was_password && !e.is_office() {
+            if was_password {
                 removed.push(t.open_password);
             }
             if e.is_office() {
@@ -2083,6 +2080,37 @@ mod tests {
         hover_entry(&mut h, "brief.docx");
         h.get_by_label(EN.tip_removed);
         h.get_by_label(EN.lock_editing);
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn verschluesselte_office_datei() {
+        let dir = core::tests::tmpdir("office-enc-gui");
+        let odt = dir.join("geheim.odt");
+        std::fs::write(&odt, crate::office_crypto::tests::fixture("wholesome.odt")).unwrap();
+        let mut h = harness(vec![odt]);
+        wait(&mut h, checked);
+        assert!(matches!(h.state().entries[0].status, Status::Ready(Protection::PasswordRequired)));
+        h.run_steps(2);
+        // wie bei PDF: Passwortfeld erscheint
+        h.get_by_label(EN.password);
+
+        h.state_mut().password = "falsch".into();
+        h.get_by_label(&format!("🔓  {}", fill(EN.unlock_n, "n", 1))).click();
+        h.run_steps(1);
+        wait(&mut h, |a| a.progress.is_none());
+        assert!(matches!(h.state().entries[0].status, Status::Failed(Fail::WrongPassword)), "{:?}", h.state().entries[0].status);
+
+        h.state_mut().password = "Geheim-123".into();
+        h.get_by_label(&format!("🔓  {}", fill(EN.unlock_n, "n", 1))).click();
+        h.run_steps(1);
+        wait(&mut h, |a| a.progress.is_none());
+        let Status::Done(out, Mode::Unlock) = &h.state().entries[0].status else {
+            panic!("{:?}", h.state().entries[0].status)
+        };
+        assert_eq!(core::inspect(out).unwrap().protection, Protection::None);
+        hover_entry(&mut h, "geheim.odt");
+        h.get_by_label(EN.open_password);
         std::fs::remove_dir_all(dir).ok();
     }
 

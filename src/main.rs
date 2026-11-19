@@ -7,6 +7,7 @@ mod export;
 mod gui;
 mod i18n;
 mod office;
+mod office_crypto;
 mod settings;
 mod update;
 
@@ -15,8 +16,8 @@ use std::process::ExitCode;
 
 const HELP: &str = "\
 Doclatch – removes or adds password protection and restrictions for PDF files
-and removes editing, sheet and structure protection from Office documents
-(DOCX, XLSX, PPTX, ODT, ODS, ODP and their templates).
+and decrypts Office documents with a known password or removes their editing,
+sheet and structure protection (DOCX, XLSX, PPTX, ODT, ODS, ODP and their templates).
 
 Usage:
   doclatch                           Start the graphical interface

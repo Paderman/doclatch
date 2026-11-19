@@ -35,7 +35,7 @@ pub enum UnlockError {
     Pdf(String),
     /// Fehler in einem Office-Dokument (ZIP/XML).
     Document(String),
-    /// Office-Dokument ist mit Passwort verschlüsselt (noch nicht unterstützt).
+    /// Office-Dokument ist mit einem nicht unterstützten Verfahren verschlüsselt.
     OfficeEncrypted,
     /// Schützen ist nur für PDF möglich.
     OfficeProtect,
@@ -50,7 +50,7 @@ impl fmt::Display for UnlockError {
             UnlockError::NotEncrypted => f.write_str("file is not protected"),
             UnlockError::Pdf(e) => write!(f, "PDF error: {e}"),
             UnlockError::Document(e) => write!(f, "document error: {e}"),
-            UnlockError::OfficeEncrypted => f.write_str("password-encrypted Office files are not supported yet"),
+            UnlockError::OfficeEncrypted => f.write_str("this Office encryption method is not supported"),
             UnlockError::OfficeProtect => f.write_str("protection is available for PDF files only"),
             UnlockError::Io(e) => write!(f, "file error: {e}"),
         }
@@ -206,7 +206,7 @@ fn save(doc: &mut Document, output: &Path, size_hint: usize) -> Result<(), Unloc
 /// Bei Office-Dokumenten wird der Bearbeitungsschutz entfernt; ein Passwort ist dafür nicht nötig.
 pub fn unlock(input: &Path, output: &Path, password: Option<&str>) -> Result<Protection, UnlockError> {
     if let Some(format) = crate::office::format_of(input) {
-        return crate::office::unlock(input, output, format);
+        return crate::office::unlock(input, output, format, password);
     }
     let bytes = std::fs::read(input)?;
     let (mut doc, protection) = open_plain(&bytes, password)?;

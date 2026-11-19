@@ -215,19 +215,28 @@ pub fn inspect(path: &Path, format: Format) -> Result<Inspection, UnlockError> {
     Ok(Inspection { protection, permissions: None, signed: s.signed, locks: s.locks })
 }
 
-/// Entfernt Bearbeitungs-, Blatt- und Strukturschutz und schreibt das Ergebnis nach `output`.
-pub fn unlock(input: &Path, output: &Path, format: Format) -> Result<Protection, UnlockError> {
-    let bytes = std::fs::read(input)?;
-    let s = scan(&bytes, format)?;
-    if s.encrypted {
-        return Err(UnlockError::OfficeEncrypted);
-    }
-    if s.changed.is_empty() {
+/// Entschlüsselt (mit bekanntem Passwort), entfernt Bearbeitungs-, Blatt- und Strukturschutz und
+/// schreibt das Ergebnis nach `output`.
+pub fn unlock(input: &Path, output: &Path, format: Format, password: Option<&str>) -> Result<Protection, UnlockError> {
+    let mut bytes = std::fs::read(input)?;
+    let mut s = scan(&bytes, format)?;
+    let was_encrypted = s.encrypted;
+    if was_encrypted {
+        let password = password.filter(|p| !p.is_empty()).ok_or(UnlockError::PasswordMissing)?;
+        bytes = match format {
+            Format::Ooxml => crate::office_crypto::decrypt_ooxml(&bytes, password)?,
+            Format::Odf => crate::office_crypto::decrypt_odf(&bytes, password)?,
+        };
+        s = scan(&bytes, format)?;
+        if s.encrypted {
+            return Err(UnlockError::Document("document is still encrypted".into()));
+        }
+    } else if s.changed.is_empty() {
         return Err(UnlockError::NotEncrypted);
     }
-    let out = repack(&bytes, s.changed)?;
+    let out = if s.changed.is_empty() { bytes } else { repack(&bytes, s.changed)? };
     crate::core::write_atomic(output, &out)?;
-    Ok(Protection::RestrictionsOnly)
+    Ok(if was_encrypted { Protection::PasswordRequired } else { Protection::RestrictionsOnly })
 }
 
 /// Baut das ZIP neu: geänderte Teile werden neu komprimiert, alle anderen roh kopiert
@@ -519,7 +528,7 @@ pub(crate) mod tests {
             l
         });
         let out = dir.join("out.docx");
-        assert_eq!(unlock(&p, &out, Format::Ooxml).unwrap(), Protection::RestrictionsOnly);
+        assert_eq!(unlock(&p, &out, Format::Ooxml, None).unwrap(), Protection::RestrictionsOnly);
         let s = read_part(&out, "word/settings.xml");
         assert_eq!(
             s,
@@ -530,7 +539,7 @@ pub(crate) mod tests {
         // unveränderter Teil bleibt byte-genau gleich
         assert!(read_part(&out, "word/document.xml").contains("Geheimer Text &amp; mehr"));
         assert_eq!(inspect(&out, Format::Ooxml).unwrap().protection, Protection::None);
-        assert!(matches!(unlock(&out, &dir.join("x.docx"), Format::Ooxml), Err(UnlockError::NotEncrypted)));
+        assert!(matches!(unlock(&out, &dir.join("x.docx"), Format::Ooxml, None), Err(UnlockError::NotEncrypted)));
         std::fs::remove_dir_all(dir).ok();
     }
 
@@ -568,7 +577,7 @@ pub(crate) mod tests {
             l
         });
         let out = dir.join("out.xlsx");
-        unlock(&p, &out, Format::Ooxml).unwrap();
+        unlock(&p, &out, Format::Ooxml, None).unwrap();
         let wb2 = read_part(&out, "xl/workbook.xml");
         assert!(wb2.contains(r#"<fileSharing userName="A"/>"#) && !wb2.contains("workbookProtection"));
         let s1 = read_part(&out, "xl/worksheets/sheet1.xml");
@@ -586,7 +595,7 @@ pub(crate) mod tests {
         make_zip(&p, &[("[Content_Types].xml", CT, true), ("ppt/presentation.xml", pres, true)]);
         assert_eq!(inspect(&p, Format::Ooxml).unwrap().locks, Locks::READ_ONLY);
         let out = dir.join("out.pptx");
-        unlock(&p, &out, Format::Ooxml).unwrap();
+        unlock(&p, &out, Format::Ooxml, None).unwrap();
         assert_eq!(
             read_part(&out, "ppt/presentation.xml"),
             r#"<p:presentation xmlns:p="x"><p:sldIdLst/></p:presentation>"#
@@ -602,7 +611,10 @@ pub(crate) mod tests {
         data.extend_from_slice(&[0u8; 512]);
         std::fs::write(&p, data).unwrap();
         assert_eq!(inspect(&p, Format::Ooxml).unwrap().protection, Protection::PasswordRequired);
-        assert!(matches!(unlock(&p, &dir.join("x.docx"), Format::Ooxml), Err(UnlockError::OfficeEncrypted)));
+        assert!(matches!(unlock(&p, &dir.join("x.docx"), Format::Ooxml, None), Err(UnlockError::PasswordMissing)));
+        // kein gültiger Container: Fehler, keine Ausgabedatei
+        assert!(matches!(unlock(&p, &dir.join("x.docx"), Format::Ooxml, Some("pw")), Err(UnlockError::Document(_))));
+        assert!(!dir.join("x.docx").exists());
 
         let s = dir.join("signiert.docx");
         make_zip(
@@ -648,7 +660,7 @@ pub(crate) mod tests {
         assert_eq!(i.locks, want);
 
         let out = dir.join("out.ods");
-        unlock(&p, &out, Format::Odf).unwrap();
+        unlock(&p, &out, Format::Odf, None).unwrap();
         let c = read_part(&out, "content.xml");
         assert!(c.contains(r#"<office:spreadsheet>"#), "{c}");
         assert!(c.contains(r#"<table:table table:name="Blatt1" table:style-name="ta&quot;1">"#), "{c}");
@@ -688,7 +700,7 @@ pub(crate) mod tests {
         want.insert(Locks::READ_ONLY);
         assert_eq!(i.locks, want);
         let out = dir.join("out.odt");
-        unlock(&p, &out, Format::Odf).unwrap();
+        unlock(&p, &out, Format::Odf, None).unwrap();
         let c = read_part(&out, "content.xml");
         assert!(
             c.contains(r#"<text:section text:name="B1">"#)
@@ -738,7 +750,7 @@ pub(crate) mod tests {
         let out = dir.join("out.docx");
         let check = |p: &Path, format: Format| {
             assert!(inspect(p, format).is_err(), "{p:?}: inspect muss scheitern");
-            assert!(unlock(p, &out, format).is_err(), "{p:?}: unlock muss scheitern");
+            assert!(unlock(p, &out, format, Some("pw")).is_err(), "{p:?}: unlock muss scheitern");
             assert!(!out.exists(), "{p:?}: es darf keine Ausgabe entstehen");
         };
 
@@ -768,7 +780,7 @@ pub(crate) mod tests {
                 ("word/settings.xml", "<w:settings><w:documentProtection w:enforcement=\"1\"/></w:falsch>", true),
             ],
         );
-        let e = unlock(&p, &out, Format::Ooxml).unwrap_err();
+        let e = unlock(&p, &out, Format::Ooxml, None).unwrap_err();
         assert!(matches!(e, UnlockError::Document(ref m) if m.contains("word/settings.xml")), "{e}");
         assert!(!out.exists());
 
@@ -786,7 +798,7 @@ pub(crate) mod tests {
         // Original bleibt bei Fehler unangetastet, auch beim Überschreiben an Ort und Stelle
         let p = dir.join("inplace.docx");
         std::fs::write(&p, "kein zip").unwrap();
-        assert!(unlock(&p, &p, Format::Ooxml).is_err());
+        assert!(unlock(&p, &p, Format::Ooxml, None).is_err());
         assert_eq!(std::fs::read(&p).unwrap(), b"kein zip");
         std::fs::remove_dir_all(dir).ok();
     }

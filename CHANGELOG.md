@@ -14,8 +14,11 @@ All notable changes to Doclatch are listed here. The format follows
   sheet and workbook structure protection, protected sections, protected change tracking,
   “password to modify” and the read-only recommendation. Only effective protection entries are
   removed; all other parts of the file stay byte-for-byte unchanged.
-- Password-encrypted Office files and digital signatures in Office files are detected
-  (decryption is not supported yet).
+- **Decrypting Office documents** with a known password: Word, Excel and PowerPoint with Standard
+  (AES) or Agile encryption, OpenDocument with AES-256-GCM/Argon2id (LibreOffice 24.2 and later) or
+  AES-256-CBC/PBKDF2. Remaining editing protection is removed in the same step. The password field
+  appears for encrypted Office files as it does for PDF files.
+- Digital signatures in Office files are detected.
 - `--info` lists the protection types found in Office documents.
 - **Password generator** next to the open and permissions password (22 random characters without
   easily confused ones such as `0/O` or `l/1/I`), plus a button to copy a password.
