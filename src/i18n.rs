@@ -215,6 +215,15 @@ strings!(
     filter_sheets,
     filter_presentations,
     filter_drawings,
+    generate_password,
+    copy_password,
+    copied,
+    save_passwords,
+    passwords_saved,
+    export_title,
+    export_created,
+    export_file,
+    export_warning,
 );
 
 pub static EN: Strings = Strings {
@@ -330,6 +339,15 @@ pub static EN: Strings = Strings {
     filter_sheets: "Spreadsheets",
     filter_presentations: "Presentations",
     filter_drawings: "Drawings",
+    generate_password: "Generate password",
+    copy_password: "Copy password",
+    copied: "Copied",
+    save_passwords: "Save passwords…",
+    passwords_saved: "Passwords saved: {path}",
+    export_title: "Doclatch – passwords",
+    export_created: "Created",
+    export_file: "File",
+    export_warning: "This file is not encrypted – store it separately from the documents.",
 };
 
 pub static DE: Strings = Strings {
@@ -445,6 +463,15 @@ pub static DE: Strings = Strings {
     filter_sheets: "Tabellen",
     filter_presentations: "Präsentationen",
     filter_drawings: "Zeichnungen",
+    generate_password: "Passwort erzeugen",
+    copy_password: "Passwort kopieren",
+    copied: "Kopiert",
+    save_passwords: "Passwörter speichern…",
+    passwords_saved: "Passwörter gespeichert: {path}",
+    export_title: "Doclatch – Passwörter",
+    export_created: "Erstellt",
+    export_file: "Datei",
+    export_warning: "Diese Datei ist nicht verschlüsselt – getrennt von den Dokumenten aufbewahren.",
 };
 
 pub static FR: Strings = Strings {
@@ -560,6 +587,15 @@ pub static FR: Strings = Strings {
     filter_sheets: "Classeurs",
     filter_presentations: "Présentations",
     filter_drawings: "Dessins",
+    generate_password: "Générer un mot de passe",
+    copy_password: "Copier le mot de passe",
+    copied: "Copié",
+    save_passwords: "Enregistrer les mots de passe…",
+    passwords_saved: "Mots de passe enregistrés : {path}",
+    export_title: "Doclatch – mots de passe",
+    export_created: "Créé le",
+    export_file: "Fichier",
+    export_warning: "Ce fichier n’est pas chiffré – à conserver séparément des documents.",
 };
 
 pub static ES: Strings = Strings {
@@ -675,6 +711,15 @@ pub static ES: Strings = Strings {
     filter_sheets: "Hojas de cálculo",
     filter_presentations: "Presentaciones",
     filter_drawings: "Dibujos",
+    generate_password: "Generar contraseña",
+    copy_password: "Copiar contraseña",
+    copied: "Copiado",
+    save_passwords: "Guardar contraseñas…",
+    passwords_saved: "Contraseñas guardadas: {path}",
+    export_title: "Doclatch – contraseñas",
+    export_created: "Creado",
+    export_file: "Archivo",
+    export_warning: "Este archivo no está cifrado: debe guardarse por separado de los documentos.",
 };
 
 pub static IT: Strings = Strings {
@@ -790,6 +835,15 @@ pub static IT: Strings = Strings {
     filter_sheets: "Fogli di calcolo",
     filter_presentations: "Presentazioni",
     filter_drawings: "Disegni",
+    generate_password: "Genera password",
+    copy_password: "Copia password",
+    copied: "Copiato",
+    save_passwords: "Salva password…",
+    passwords_saved: "Password salvate: {path}",
+    export_title: "Doclatch – password",
+    export_created: "Creato",
+    export_file: "File",
+    export_warning: "Questo file non è crittografato – va conservato separatamente dai documenti.",
 };
 
 pub static PT: Strings = Strings {
@@ -905,6 +959,15 @@ pub static PT: Strings = Strings {
     filter_sheets: "Planilhas",
     filter_presentations: "Apresentações",
     filter_drawings: "Desenhos",
+    generate_password: "Gerar senha",
+    copy_password: "Copiar senha",
+    copied: "Copiado",
+    save_passwords: "Salvar senhas…",
+    passwords_saved: "Senhas salvas: {path}",
+    export_title: "Doclatch – senhas",
+    export_created: "Criado em",
+    export_file: "Arquivo",
+    export_warning: "Este arquivo não está criptografado – deve ser guardado separado dos documentos.",
 };
 
 pub static NL: Strings = Strings {
@@ -1020,6 +1083,15 @@ pub static NL: Strings = Strings {
     filter_sheets: "Spreadsheets",
     filter_presentations: "Presentaties",
     filter_drawings: "Tekeningen",
+    generate_password: "Wachtwoord genereren",
+    copy_password: "Wachtwoord kopiëren",
+    copied: "Gekopieerd",
+    save_passwords: "Wachtwoorden opslaan…",
+    passwords_saved: "Wachtwoorden opgeslagen: {path}",
+    export_title: "Doclatch – wachtwoorden",
+    export_created: "Aangemaakt",
+    export_file: "Bestand",
+    export_warning: "Dit bestand is niet versleuteld – apart van de documenten bewaren.",
 };
 
 pub static PL: Strings = Strings {
@@ -1135,6 +1207,15 @@ pub static PL: Strings = Strings {
     filter_sheets: "Arkusze kalkulacyjne",
     filter_presentations: "Prezentacje",
     filter_drawings: "Rysunki",
+    generate_password: "Wygeneruj hasło",
+    copy_password: "Kopiuj hasło",
+    copied: "Skopiowano",
+    save_passwords: "Zapisz hasła…",
+    passwords_saved: "Zapisano hasła: {path}",
+    export_title: "Doclatch – hasła",
+    export_created: "Utworzono",
+    export_file: "Plik",
+    export_warning: "Ten plik nie jest zaszyfrowany – należy przechowywać go oddzielnie od dokumentów.",
 };
 
 pub static TR: Strings = Strings {
@@ -1250,6 +1331,15 @@ pub static TR: Strings = Strings {
     filter_sheets: "Elektronik tablolar",
     filter_presentations: "Sunular",
     filter_drawings: "Çizimler",
+    generate_password: "Parola oluştur",
+    copy_password: "Parolayı kopyala",
+    copied: "Kopyalandı",
+    save_passwords: "Parolaları kaydet…",
+    passwords_saved: "Parolalar kaydedildi: {path}",
+    export_title: "Doclatch – parolalar",
+    export_created: "Oluşturulma",
+    export_file: "Dosya",
+    export_warning: "Bu dosya şifrelenmemiştir – belgelerden ayrı saklanmalıdır.",
 };
 
 pub static RU: Strings = Strings {
@@ -1365,6 +1455,15 @@ pub static RU: Strings = Strings {
     filter_sheets: "Электронные таблицы",
     filter_presentations: "Презентации",
     filter_drawings: "Рисунки",
+    generate_password: "Создать пароль",
+    copy_password: "Копировать пароль",
+    copied: "Скопировано",
+    save_passwords: "Сохранить пароли…",
+    passwords_saved: "Пароли сохранены: {path}",
+    export_title: "Doclatch – пароли",
+    export_created: "Создано",
+    export_file: "Файл",
+    export_warning: "Этот файл не зашифрован – его следует хранить отдельно от документов.",
 };
 
 pub static UK: Strings = Strings {
@@ -1480,6 +1579,15 @@ pub static UK: Strings = Strings {
     filter_sheets: "Електронні таблиці",
     filter_presentations: "Презентації",
     filter_drawings: "Малюнки",
+    generate_password: "Створити пароль",
+    copy_password: "Копіювати пароль",
+    copied: "Скопійовано",
+    save_passwords: "Зберегти паролі…",
+    passwords_saved: "Паролі збережено: {path}",
+    export_title: "Doclatch – паролі",
+    export_created: "Створено",
+    export_file: "Файл",
+    export_warning: "Цей файл не зашифровано – його слід зберігати окремо від документів.",
 };
 
 #[cfg(test)]

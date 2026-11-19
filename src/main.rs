@@ -3,6 +3,7 @@
 
 mod core;
 mod desktop;
+mod export;
 mod gui;
 mod i18n;
 mod office;

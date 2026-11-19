@@ -216,6 +216,14 @@ pub struct App {
     owner_pw: String,
     show_new_pw: bool,
     allowed: Permissions,
+    /// Passwörter des laufenden Schutz-Auftrags: (Öffnen, selbst gewähltes Rechte-Passwort)
+    batch_pw: Option<(String, Option<String>)>,
+    /// Geschützte Ergebnisse dieser Sitzung samt Passwörtern (für den Export)
+    pw_records: Vec<crate::export::Record>,
+    /// Zuletzt gespeicherte Passwortliste (Knopf zeigt dann „gespeichert“)
+    pw_saved: Option<PathBuf>,
+    /// Kopieren-Rückmeldung: (Feld 0/1, Zeitpunkt)
+    copied: Option<(usize, std::time::Instant)>,
     /// Höhe aller Elemente außer der Liste im letzten Bild (die Liste füllt den Rest)
     other_h: f32,
     settings: Settings,
@@ -258,6 +266,10 @@ impl App {
             owner_pw: String::new(),
             show_new_pw: false,
             allowed: ALL_PERMISSIONS,
+            batch_pw: None,
+            pw_records: Vec::new(),
+            pw_saved: None,
+            copied: None,
             other_h: 360.0,
             settings,
             persist,
@@ -420,6 +432,8 @@ impl App {
         }
         let cancel = Arc::new(AtomicBool::new(false));
         self.progress = Some(Progress { done: 0, total: files.len(), cancel: cancel.clone() });
+        self.batch_pw = (mode == Mode::Protect)
+            .then(|| (self.open_pw.clone(), Some(self.owner_pw.clone()).filter(|o| !o.is_empty())));
         let _ = self.jobs.send(Job::Process {
             files,
             protect: (mode == Mode::Protect).then(|| self.protect_options()),
@@ -452,6 +466,15 @@ impl App {
                 Msg::Unlocked(p, st) => {
                     if let Some(pr) = &mut self.progress {
                         pr.done += 1;
+                    }
+                    if let (Status::Done(out, Mode::Protect), Some((open, owner))) = (&st, &self.batch_pw) {
+                        let rec = crate::export::Record { file: out.clone(), open: open.clone(), owner: owner.clone() };
+                        // Bei erneutem Schützen derselben Datei gilt nur der neueste Eintrag.
+                        self.pw_records.retain(|r| r.file != rec.file);
+                        if rec.has_password() {
+                            self.pw_records.push(rec);
+                            self.pw_saved = None;
+                        }
                     }
                     if let Some(e) = self.entry_mut(&p) {
                         e.status = st;
@@ -1072,6 +1095,22 @@ impl App {
                     self.rebuild_index();
                 }
             }
+            if !self.pw_records.is_empty() {
+                let saved = self.pw_saved.is_some();
+                let label =
+                    if saved { format!("✔ {}", t.save_passwords) } else { format!("💾 {}", t.save_passwords) };
+                let b = egui::Button::new(RichText::new(label).color(if saved { pal.success } else { pal.text }))
+                    .fill(pal.surface_hi)
+                    .corner_radius(CornerRadius::same(10))
+                    .min_size(Vec2::new(0.0, 42.0));
+                let hover = match &self.pw_saved {
+                    Some(p) => fill(t.passwords_saved, "path", p.display()),
+                    None => t.export_warning.to_string(),
+                };
+                if ui.add(b).on_hover_text(hover).clicked() {
+                    self.save_passwords();
+                }
+            }
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 let (icon, one, many) =
                     if protect { ("🔒", t.protect, t.protect_n) } else { ("🔓", t.unlock, t.unlock_n) };
@@ -1098,12 +1137,52 @@ impl App {
         });
     }
 
+    /// Speichert die Passwortliste dieser Sitzung (TXT oder CSV, je nach gewählter Endung).
+    fn save_passwords(&mut self) {
+        let t = self.t();
+        let Some(path) = rfd::FileDialog::new()
+            .set_title(t.save_passwords.trim_end_matches('…'))
+            .set_file_name("doclatch-passwords.txt")
+            .add_filter("Text (txt)", &["txt"])
+            .add_filter("CSV (csv)", &["csv"])
+            .save_file()
+        else {
+            return;
+        };
+        let labels = crate::export::Labels {
+            title: t.export_title,
+            created: t.export_created,
+            warning: t.export_warning,
+            file: t.export_file,
+            open: t.open_password,
+            owner: t.owner_password,
+        };
+        let content = if crate::export::is_csv(&path) {
+            crate::export::to_csv(&self.pw_records, &labels)
+        } else {
+            crate::export::to_txt(&self.pw_records, &labels, &crate::export::now_utc())
+        };
+        match crate::export::write(&path, &content) {
+            Ok(()) => self.pw_saved = Some(path),
+            Err(e) => {
+                rfd::MessageDialog::new()
+                    .set_level(rfd::MessageLevel::Error)
+                    .set_title("Doclatch")
+                    .set_description(fill(t.err_io, "e", e))
+                    .set_buttons(rfd::MessageButtons::Ok)
+                    .show();
+            }
+        }
+    }
+
     /// Passwörter und erlaubte Aktionen für den Schutz-Modus.
     fn protect_settings(&mut self, ui: &mut egui::Ui) {
         let (pal, t) = (self.pal(), self.t());
         let label_w = 150.0;
         let show = self.show_new_pw;
         let mut toggle = false;
+        let mut reveal = false;
+        let mut copied = None;
         for (i, (label, hint)) in
             [(t.open_password, t.open_pw_hint), (t.owner_password, t.owner_pw_hint)].into_iter().enumerate()
         {
@@ -1113,26 +1192,55 @@ impl App {
                     ui.set_min_width(label_w);
                     ui.add(egui::Label::new(RichText::new(label).color(pal.muted)).truncate());
                 });
-                let w = ui.available_width() - if i == 0 { 44.0 } else { 0.0 };
+                // Knöpfe von rechts nach links: 👁 (nur erste Zeile, sonst gleich breiter Leerraum),
+                // 📑 kopieren, 🔄 erzeugen – das Feld füllt den Rest, so sind beide Felder gleich breit.
                 let text = if i == 0 { &mut self.open_pw } else { &mut self.owner_pw };
-                ui.add(
-                    egui::TextEdit::singleline(text)
-                        .password(!show)
-                        .hint_text(hint)
-                        .margin(Margin::symmetric(10, 7))
-                        .desired_width(w),
-                );
-                if i == 0 {
-                    let eye = egui::Button::new(if show { "🙈" } else { "👁" })
-                        .fill(pal.surface_hi)
-                        .corner_radius(CornerRadius::same(8));
-                    toggle = ui.add(eye).on_hover_text(t.show_password).clicked();
-                }
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    let small = |s: &str| {
+                        egui::Button::new(s)
+                            .fill(pal.surface_hi)
+                            .corner_radius(CornerRadius::same(8))
+                            .min_size(Vec2::new(PW_BUTTON_W, 0.0))
+                    };
+                    if i == 0 {
+                        toggle = ui.add(small(if show { "🙈" } else { "👁" })).on_hover_text(t.show_password).clicked();
+                    } else {
+                        // unsichtbarer Platzhalter in exakt derselben Größe
+                        ui.add_visible(false, small("👁"));
+                    }
+                    let just_copied = self.copied.is_some_and(|(f, at)| f == i && at.elapsed().as_secs_f32() < 1.5);
+                    let copy = ui.add_enabled(!text.is_empty(), small(if just_copied { "✔" } else { "📑" }));
+                    if copy.on_hover_text(if just_copied { t.copied } else { t.copy_password }).clicked() {
+                        ui.ctx().copy_text(text.clone());
+                        copied = Some(i);
+                    }
+                    if ui.add(small("🔄")).on_hover_text(t.generate_password).clicked()
+                        && let Ok(pw) = crate::export::generate_password()
+                    {
+                        *text = pw;
+                        reveal = true;
+                    }
+                    ui.add(
+                        egui::TextEdit::singleline(text)
+                            .password(!show)
+                            .hint_text(hint)
+                            .margin(Margin::symmetric(10, 7))
+                            .desired_width(ui.available_width()),
+                    );
+                });
             });
             ui.add_space(4.0);
         }
         if toggle {
             self.show_new_pw = !self.show_new_pw;
+        }
+        // Erzeugte Passwörter gleich sichtbar machen – sonst weiß niemand, was gesetzt wurde.
+        if reveal {
+            self.show_new_pw = true;
+        }
+        if let Some(i) = copied {
+            self.copied = Some((i, std::time::Instant::now()));
+            ui.ctx().request_repaint_after(std::time::Duration::from_millis(1600));
         }
         if !self.open_pw.is_empty() {
             ui.label(RichText::new(format!("🔐 {}", t.keep_password)).size(12.0).color(pal.warn));
@@ -1362,6 +1470,9 @@ fn fit_font(p: &egui::Painter, text: &str, size: f32, width: f32) -> FontId {
     }
     FontId::proportional(size)
 }
+
+/// Mindestbreite der kleinen Knöpfe neben den Passwortfeldern.
+const PW_BUTTON_W: f32 = 32.0;
 
 /// Gängigste Endungen für den Hinweis im Ablagefeld (Vorlagen und Makro-Varianten werden
 /// ebenfalls angenommen, stehen aber nicht in der Kurzliste).
@@ -1796,6 +1907,37 @@ mod tests {
         let Status::Done(out, Mode::Unlock) = &e.status else { panic!("{:?}", e.status) };
         assert!(out.to_string_lossy().ends_with("brief_unlocked.docx"));
         assert_eq!(core::inspect(out).unwrap().protection, Protection::None);
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn passwort_erzeugen_und_merken() {
+        let (dir, files) = make_pdfs("pwgen", 2);
+        let mut h = harness(files);
+        wait(&mut h, checked);
+        h.get_by_label(&format!("🔒  {}", EN.protect)).click();
+        h.run_steps(2);
+        assert!(!h.state().show_new_pw);
+
+        // 🔄 am Öffnen-Passwort: zufälliges Passwort, sofort sichtbar
+        h.query_all_by_label("🔄").next().unwrap().click();
+        h.run_steps(2);
+        let pw = h.state().open_pw.clone();
+        assert_eq!(pw.len(), crate::export::GENERATED_LEN);
+        assert!(h.state().show_new_pw);
+        assert!(h.query_by_label(&format!("💾 {}", EN.save_passwords)).is_none(), "noch nichts geschützt");
+
+        h.get_by_label(&format!("🔒  {}", fill(EN.protect_n, "n", 2))).click();
+        h.run_steps(1);
+        wait(&mut h, |a| a.progress.is_none());
+        h.run_steps(2);
+        let recs = &h.state().pw_records;
+        assert_eq!(recs.len(), 2);
+        assert!(recs.iter().all(|r| r.open == pw && r.owner.is_none() && core::inspect(&r.file).is_ok()));
+        h.get_by_label(&format!("💾 {}", EN.save_passwords));
+        // Erzeugtes Passwort öffnet die Datei wirklich
+        let back = dir.join("back.pdf");
+        core::unlock(&recs[0].file, &back, Some(&pw)).unwrap();
         std::fs::remove_dir_all(dir).ok();
     }
 
