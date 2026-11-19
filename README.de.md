@@ -19,6 +19,15 @@ Reines Rust, läuft nativ auf Linux, Windows und macOS. Dateien werden lokal ver
 
 Unterstützt: RC4 40/128 Bit, AES-128, AES-256 (Standard-Security-Handler, PDF 1.4 – 2.0).
 
+**Office-Dokumente:** Bearbeitungs-, Blatt- und Strukturschutz wird aus Word-, Excel- und
+PowerPoint-Dateien (`.docx`, `.xlsx`, `.pptx` samt Makro- und Vorlagenvarianten) sowie aus
+OpenDocument-Dateien (`.odt`, `.ods`, `.odp`, `.odg` und Vorlagen) entfernt:
+eingeschränkte Bearbeitung, Blatt- und Arbeitsmappenschutz, geschützte Bereiche,
+geschützte Änderungsverfolgung, „Kennwort zum Ändern“ und die Empfehlung, schreibgeschützt zu öffnen.
+Dieser Schutz ist keine Verschlüsselung, daher ist kein Passwort nötig; entfernt werden nur die
+Schutz-Einträge, alle übrigen Teile der Datei bleiben byte-genau erhalten. Mit Passwort verschlüsselte
+Office-Dateien werden erkannt, aber noch nicht entschlüsselt. Schützen ist nur für PDF-Dateien verfügbar.
+
 Oberfläche in 11 Sprachen (Englisch als Standard, Deutsch, Französisch, Spanisch, Italienisch, Portugiesisch,
 Niederländisch, Polnisch, Türkisch, Russisch, Ukrainisch), Theme Auto/Dunkel/Hell. Die Übersetzungen
 wurden mit KI-Unterstützung erstellt; Korrekturen von Muttersprachlern sind willkommen (`src/i18n.rs`).
@@ -50,6 +59,7 @@ doclatch *.pdf -o ./entsperrt/             # mehrere Dateien, Zielordner
 doclatch --in-place rechnung.pdf           # Original überschreiben
 DOCLATCH_PASSWORD=geheim doclatch a.pdf    # Passwort ohne Shell-History
 doclatch --gui a.pdf b.pdf                 # Oberfläche mit vorausgewählten Dateien
+doclatch bericht.xlsx brief.odt            # → bericht_unlocked.xlsx, brief_unlocked.odt
 doclatch --protect --open-password geheim --allow print vertrag.pdf   # → vertrag_protected.pdf
 doclatch --protect --allow print,copy *.pdf                           # nur Einschränkungen
 ```

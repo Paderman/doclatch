@@ -5,6 +5,7 @@ mod core;
 mod desktop;
 mod gui;
 mod i18n;
+mod office;
 mod settings;
 mod update;
 
@@ -12,13 +13,15 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 const HELP: &str = "\
-Doclatch – removes or adds password protection and restrictions for PDF files.
+Doclatch – removes or adds password protection and restrictions for PDF files
+and removes editing, sheet and structure protection from Office documents
+(DOCX, XLSX, PPTX, ODT, ODS, ODP and their templates).
 
 Usage:
   doclatch                           Start the graphical interface
   doclatch --gui FILE...             Open the interface with these files
   doclatch [OPTIONS] FILE...         Unlock (default) on the command line
-  doclatch --protect [OPTIONS] FILE...  Protect with AES-256
+  doclatch --protect [OPTIONS] FILE...  Protect with AES-256 (PDF only)
 
 Options:
   -p, --password PW   Current password to open the file (if required)
@@ -211,6 +214,9 @@ fn print_info(files: &[PathBuf]) -> ExitCode {
                 println!("{}: {}", f.display(), i.protection);
                 if i.signed {
                     println!("  ! digitally signed – the signature becomes invalid when the file is changed");
+                }
+                if !i.locks.is_empty() {
+                    println!("  protection found: {}", i.locks);
                 }
                 if let Some(perms) = i.permissions {
                     for (flag, _, name) in PERM_NAMES {

@@ -2,6 +2,7 @@
 
 use crate::core::{self, ALL_PERMISSIONS, Permissions, ProtectOptions, Protection, UnlockError};
 use crate::i18n::{Lang, Strings, fill};
+use crate::office::Locks;
 use crate::settings::{LangPref, Settings, ThemePref, ThemeWatcher};
 use crate::update::{self, UpdateState};
 use eframe::egui::{
@@ -76,6 +77,9 @@ enum Fail {
     PasswordMissing,
     Cancelled,
     Pdf(String),
+    Document(String),
+    OfficeEncrypted,
+    OfficeProtect,
     Io(String),
 }
 
@@ -87,6 +91,9 @@ impl Fail {
             UnlockError::Pdf(s) => Fail::Pdf(s),
             UnlockError::Io(e) => Fail::Io(e.to_string()),
             UnlockError::NotEncrypted => Fail::Pdf("not encrypted".into()),
+            UnlockError::Document(s) => Fail::Document(s),
+            UnlockError::OfficeEncrypted => Fail::OfficeEncrypted,
+            UnlockError::OfficeProtect => Fail::OfficeProtect,
         }
     }
 
@@ -96,6 +103,9 @@ impl Fail {
             Fail::PasswordMissing => t.err_password_missing.into(),
             Fail::Cancelled => t.err_cancelled.into(),
             Fail::Pdf(e) => fill(t.err_pdf, "e", e),
+            Fail::Document(e) => fill(t.err_document, "e", e),
+            Fail::OfficeEncrypted => t.err_office_encrypted.into(),
+            Fail::OfficeProtect => t.err_office_protect.into(),
             Fail::Io(e) => fill(t.err_io, "e", e),
         }
     }
@@ -130,6 +140,25 @@ struct Entry {
     permissions: Option<Permissions>,
     /// Digital signiert – Signatur wird beim Bearbeiten ungültig
     signed: bool,
+    /// Office-Dokumente: gefundene Schutzarten
+    locks: Locks,
+}
+
+impl Entry {
+    fn is_office(&self) -> bool {
+        crate::office::format_of(&self.path).is_some()
+    }
+
+    fn actionable(&self, mode: Mode) -> bool {
+        match mode {
+            Mode::Unlock => matches!(
+                self.status,
+                Status::Ready(Protection::RestrictionsOnly | Protection::PasswordRequired) | Status::Failed(_)
+            ),
+            // Schützen gibt es nur für PDF.
+            Mode::Protect => !self.is_office() && matches!(self.status, Status::Ready(_) | Status::Failed(_)),
+        }
+    }
 }
 
 /// Aufträge an den einen Hintergrund-Worker – alles läuft strikt nacheinander.
@@ -149,7 +178,7 @@ enum Job {
 
 enum Msg {
     /// Pfad, Status, Berechtigungen, digital signiert
-    Inspected(PathBuf, Status, Option<Permissions>, bool),
+    Inspected(PathBuf, Status, Option<Permissions>, bool, Locks),
     Started(PathBuf),
     Unlocked(PathBuf, Status),
     UnlockFinished {
@@ -330,12 +359,7 @@ impl App {
         let mut seen = HashSet::new();
         let new: Vec<PathBuf> = paths
             .into_iter()
-            .filter(|p| {
-                p.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("pdf"))
-                    && !self.index.contains_key(p)
-                    && p.is_file()
-                    && seen.insert(p.clone())
-            })
+            .filter(|p| is_supported(p) && !self.index.contains_key(p) && p.is_file() && seen.insert(p.clone()))
             .collect();
         if new.is_empty() {
             return;
@@ -356,6 +380,7 @@ impl App {
                 protection: None,
                 permissions: None,
                 signed: false,
+                locks: Locks::default(),
             });
         }
         let _ = self.jobs.send(Job::Inspect(new.into_iter().map(|p| (p, false)).collect()));
@@ -384,7 +409,7 @@ impl App {
         let files: Vec<PathBuf> = self
             .entries
             .iter_mut()
-            .filter(|e| is_actionable(&e.status, mode))
+            .filter(|e| e.actionable(mode))
             .map(|e| {
                 e.status = Status::Queued;
                 e.path.clone()
@@ -408,13 +433,14 @@ impl App {
     fn poll(&mut self) {
         while let Ok(msg) = self.rx.try_recv() {
             match msg {
-                Msg::Inspected(p, st, perms, signed) => {
+                Msg::Inspected(p, st, perms, signed, locks) => {
                     if let Some(e) = self.entry_mut(&p) {
                         if let Status::Ready(pr) = st {
                             e.protection = Some(pr);
                         }
                         e.permissions = perms;
                         e.signed = signed;
+                        e.locks = locks;
                         e.status = st;
                     }
                 }
@@ -447,13 +473,14 @@ impl App {
     }
 
     fn actionable(&self) -> usize {
-        self.entries.iter().filter(|e| is_actionable(&e.status, self.mode)).count()
+        self.entries.iter().filter(|e| e.actionable(self.mode)).count()
     }
 
     /// Passwortfeld nur zeigen, wenn eine Datei wirklich eins zum Öffnen braucht.
     fn needs_password(&self) -> bool {
         self.entries.iter().any(|e| match &e.status {
-            Status::Ready(Protection::PasswordRequired) => true,
+            // Verschlüsselte Office-Dateien werden (noch) nicht entschlüsselt – Passwort nützt nichts.
+            Status::Ready(Protection::PasswordRequired) => !e.is_office(),
             Status::Failed(f) => f.needs_password(),
             _ => false,
         })
@@ -464,15 +491,6 @@ fn resolve_lang(pref: LangPref, detected: Lang) -> Lang {
     match pref {
         LangPref::Auto => detected,
         LangPref::Fixed(l) => l,
-    }
-}
-
-fn is_actionable(st: &Status, mode: Mode) -> bool {
-    match mode {
-        Mode::Unlock => {
-            matches!(st, Status::Ready(Protection::RestrictionsOnly | Protection::PasswordRequired) | Status::Failed(_))
-        }
-        Mode::Protect => matches!(st, Status::Ready(_) | Status::Failed(_)),
     }
 }
 
@@ -489,11 +507,13 @@ fn worker(jobs: Receiver<Job>, tx: Sender<Msg>, ctx: egui::Context) {
                 for (p, force) in files {
                     let size = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
                     let msg = if size > LARGE_FILE && !force {
-                        Msg::Inspected(p, Status::Large(size), None, false)
+                        Msg::Inspected(p, Status::Large(size), None, false, Locks::default())
                     } else {
                         match core::inspect(&p) {
-                            Ok(i) => Msg::Inspected(p, Status::Ready(i.protection), i.permissions, i.signed),
-                            Err(e) => Msg::Inspected(p, Status::Failed(Fail::from_unlock(e)), None, false),
+                            Ok(i) => Msg::Inspected(p, Status::Ready(i.protection), i.permissions, i.signed, i.locks),
+                            Err(e) => {
+                                Msg::Inspected(p, Status::Failed(Fail::from_unlock(e)), None, false, Locks::default())
+                            }
                         }
                     };
                     send(msg);
@@ -686,11 +706,12 @@ impl App {
         dashed_border(p, rect.shrink(8.0), if active { pal.accent } else { pal.border });
         if compact {
             let title = if hovering { t.drop_release } else { t.drop_title };
+            let font = fit_font(p, &format!("📄  {title}"), 14.0, rect.width() - 40.0);
             p.text(
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
                 format!("📄  {title}"),
-                FontId::proportional(14.0),
+                font,
                 if active { pal.accent_hi } else { pal.text },
             );
         } else {
@@ -701,25 +722,30 @@ impl App {
                 FontId::proportional(28.0),
                 if active { pal.accent_hi } else { pal.muted },
             );
+            let title = if hovering { t.drop_release } else { t.drop_title };
             p.text(
                 rect.center() + Vec2::new(0.0, 16.0),
                 egui::Align2::CENTER_CENTER,
-                if hovering { t.drop_release } else { t.drop_title },
-                FontId::proportional(15.0),
+                title,
+                fit_font(p, title, 15.0, rect.width() - 40.0),
                 pal.text,
             );
+            // Hinweis mit den gängigen Endungen; passt beides nicht in die Breite, nur die Endungen.
+            let font = FontId::proportional(12.0);
+            let full = format!("{} · {DROP_EXTENSIONS}", t.drop_hint);
+            let fits = p.layout_no_wrap(full.clone(), font.clone(), pal.muted).size().x < rect.width() - 40.0;
             p.text(
                 rect.center() + Vec2::new(0.0, 36.0),
                 egui::Align2::CENTER_CENTER,
-                t.drop_hint,
-                FontId::proportional(12.0),
+                if fits { full } else { DROP_EXTENSIONS.to_string() },
+                font,
                 pal.muted,
             );
         }
         if resp.on_hover_cursor(egui::CursorIcon::PointingHand).clicked()
             && !self.busy()
             && self.pending.is_none()
-            && let Some(files) = rfd::FileDialog::new().add_filter("PDF", &["pdf", "PDF"]).pick_files()
+            && let Some(files) = file_dialog(t).pick_files()
         {
             self.add_files(files);
         }
@@ -796,6 +822,10 @@ impl App {
                                     ) = e.status
                                     {
                                         b.on_hover_cursor(egui::CursorIcon::Help).on_hover_ui(|ui| {
+                                            if e.is_office() {
+                                                locks_tooltip(ui, pal, t, e.locks, pr == Protection::PasswordRequired);
+                                                return;
+                                            }
                                             perms_tooltip(
                                                 ui,
                                                 pal,
@@ -1317,6 +1347,80 @@ fn perm_list(t: &Strings) -> [(Permissions, &'static str); 8] {
     ]
 }
 
+/// Endungen für Dateidialog und Drag & Drop.
+fn is_supported(p: &Path) -> bool {
+    p.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("pdf"))
+        || crate::office::format_of(p).is_some()
+}
+
+/// Schrift für eine Zeile, die in `width` passen muss: verkleinert bis höchstens 11 pt.
+fn fit_font(p: &egui::Painter, text: &str, size: f32, width: f32) -> FontId {
+    let mut size = size;
+    while size > 11.0 && p.layout_no_wrap(text.to_owned(), FontId::proportional(size), Color32::WHITE).size().x > width
+    {
+        size -= 0.5;
+    }
+    FontId::proportional(size)
+}
+
+/// Gängigste Endungen für den Hinweis im Ablagefeld (Vorlagen und Makro-Varianten werden
+/// ebenfalls angenommen, stehen aber nicht in der Kurzliste).
+const DROP_EXTENSIONS: &str = "PDF, DOCX, XLSX, PPTX, ODT, ODS, ODP";
+
+/// Dateidialog mit Filtern nach Dokumentart; „Alle unterstützten Dateien“ ist der erste und damit
+/// voreingestellte Filter. Die Endungen stehen alphabetisch sortiert in Klammern.
+fn file_dialog(t: &Strings) -> rfd::FileDialog {
+    use crate::office::{CATEGORIES, Category};
+    // Großschreibung für Dateisysteme, auf denen der Filter Groß-/Kleinschreibung unterscheidet
+    let patterns = |v: &[&str]| v.iter().flat_map(|e| [e.to_string(), e.to_ascii_uppercase()]).collect::<Vec<_>>();
+    let mut all = vec!["pdf"];
+    all.extend(crate::office::extensions());
+    let mut dialog =
+        rfd::FileDialog::new().add_filter(t.filter_all, &patterns(&all)).add_filter("PDF (pdf)", &patterns(&["pdf"]));
+    for (cat, exts) in CATEGORIES {
+        let name = match cat {
+            Category::Text => t.filter_text,
+            Category::Spreadsheet => t.filter_sheets,
+            Category::Presentation => t.filter_presentations,
+            Category::Drawing => t.filter_drawings,
+        };
+        let mut sorted = exts.to_vec();
+        sorted.sort_unstable();
+        dialog = dialog.add_filter(format!("{name} ({})", sorted.join(", ")), &patterns(exts));
+    }
+    dialog
+}
+
+fn lock_name(t: &Strings, l: Locks) -> &'static str {
+    match l {
+        Locks::EDITING => t.lock_editing,
+        Locks::READ_ONLY => t.lock_read_only,
+        Locks::STRUCTURE => t.lock_structure,
+        Locks::SHEETS => t.lock_sheets,
+        Locks::SECTIONS => t.lock_sections,
+        _ => t.lock_tracked,
+    }
+}
+
+fn locks_tooltip(ui: &mut egui::Ui, pal: &Palette, t: &Strings, locks: Locks, encrypted: bool) {
+    ui.set_max_width(320.0);
+    if encrypted {
+        ui.label(RichText::new(format!("🔒 {}", t.needs_open_password)).color(pal.warn));
+        ui.add_space(4.0);
+        ui.label(RichText::new(t.err_office_encrypted).size(12.0).color(pal.muted));
+        return;
+    }
+    ui.label(RichText::new(t.locks_title).strong().color(pal.text));
+    for l in locks.iter() {
+        ui.horizontal(|ui| {
+            ui.label(RichText::new("✖").color(pal.error));
+            ui.label(RichText::new(lock_name(t, l)).color(pal.text));
+        });
+    }
+    ui.add_space(4.0);
+    ui.label(RichText::new(t.unlock_removes_all).size(12.0).color(pal.muted));
+}
+
 fn perms_tooltip(ui: &mut egui::Ui, pal: &Palette, t: &Strings, perms: Option<Permissions>, needs_open: bool) {
     ui.set_max_width(320.0);
     if needs_open {
@@ -1661,6 +1765,41 @@ mod tests {
     }
 
     #[test]
+    fn office_dateien_entsperren() {
+        let (dir, mut files) = make_pdfs("office-gui", 1);
+        let docx = crate::office::tests::docx(&dir, "brief.docx");
+        files.push(docx.clone());
+        // nicht unterstützte Endungen werden beim Hinzufügen ignoriert
+        let txt = dir.join("notiz.txt");
+        std::fs::write(&txt, "x").unwrap();
+        files.push(txt);
+        let mut h = harness(files);
+        wait(&mut h, checked);
+        assert_eq!(h.state().entries.len(), 2);
+        let e = h.state().entries.iter().find(|e| e.path == docx).unwrap();
+        assert!(matches!(e.status, Status::Ready(Protection::RestrictionsOnly)));
+        assert!(e.locks.contains(Locks::EDITING) && e.permissions.is_none());
+        h.run_steps(2);
+        assert!(h.query_by_label(EN.password).is_none());
+
+        // Schützen gibt es nur für PDF
+        h.get_by_label(&format!("🔒  {}", EN.protect)).click();
+        h.run_steps(2);
+        assert_eq!(h.state().actionable(), 1);
+        h.get_by_label(&format!("🔓  {}", EN.unlock)).click();
+        h.run_steps(2);
+
+        h.get_by_label(&format!("🔓  {}", fill(EN.unlock_n, "n", 2))).click();
+        h.run_steps(1);
+        wait(&mut h, |a| a.progress.is_none());
+        let e = h.state().entries.iter().find(|e| e.path == docx).unwrap();
+        let Status::Done(out, Mode::Unlock) = &e.status else { panic!("{:?}", e.status) };
+        assert!(out.to_string_lossy().ends_with("brief_unlocked.docx"));
+        assert_eq!(core::inspect(out).unwrap().protection, Protection::None);
+        std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
     fn renderer_reihenfolge() {
         let r = renderers();
         assert_eq!(r.last(), Some(&eframe::Renderer::Glow), "OpenGL ist immer die letzte Rückfallebene");
@@ -1751,8 +1890,9 @@ mod tests {
         let mut all = files.clone();
         all.insert(0, signed);
         all.push(locked);
+        all.push(crate::office::tests::docx(&dir, "brief.docx"));
 
-        let shots: [Shot; 6] = [
+        let shots: [Shot; 9] = [
             ("de_leer_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], vec![], Mode::Unlock, View::Main),
             ("de_entsperren_dunkel", Lang::De, ThemePref::Dark, [680.0, 780.0], all.clone(), Mode::Unlock, View::Main),
             (
@@ -1775,6 +1915,9 @@ mod tests {
             ),
             ("en_einstellungen_hell", Lang::En, ThemePref::Light, [680.0, 780.0], vec![], Mode::Unlock, View::Settings),
             ("ru_entsperren_hell", Lang::Ru, ThemePref::Light, [680.0, 780.0], all.clone(), Mode::Unlock, View::Main),
+            ("ru_leer_klein_hell", Lang::Ru, ThemePref::Light, [540.0, 620.0], vec![], Mode::Unlock, View::Main),
+            ("pl_leer_klein_dunkel", Lang::Pl, ThemePref::Dark, [540.0, 620.0], vec![], Mode::Unlock, View::Main),
+            ("ru_liste_klein_dunkel", Lang::Ru, ThemePref::Dark, [540.0, 620.0], all.clone(), Mode::Unlock, View::Main),
         ];
         for (name, lang, theme, size, files, mode, view) in shots {
             let mut h = harness_with(files, lang, theme, size);

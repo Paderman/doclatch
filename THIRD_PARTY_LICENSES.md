@@ -1,6 +1,6 @@
 # Lizenzen von Drittanbieter-Bibliotheken
 
-Doclatch verwendet 319 Rust-Bibliotheken (Crates), davon 8 direkt (eframe, egui, getrandom, lopdf, rfd, sys-locale, wgpu, windows-sys). Die Liste umfasst alle Zielplattformen (Linux, Windows, macOS).
+Doclatch verwendet 325 Rust-Bibliotheken (Crates), davon 10 direkt (eframe, egui, getrandom, lopdf, quick-xml, rfd, sys-locale, wgpu, windows-sys, zip). Die Liste umfasst alle Zielplattformen (Linux, Windows, macOS).
 
 Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 
@@ -8,9 +8,9 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 
 | Anzahl | Lizenz (SPDX) |
 |---:|---|
-| 160 | `MIT OR Apache-2.0` |
-| 57 | `MIT` |
-| 26 | `Apache-2.0 OR MIT` |
+| 161 | `MIT OR Apache-2.0` |
+| 59 | `MIT` |
+| 28 | `Apache-2.0 OR MIT` |
 | 15 | `MIT/Apache-2.0` |
 | 10 | `Apache-2.0` |
 | 9 | `Zlib OR Apache-2.0 OR MIT` |
@@ -29,6 +29,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | 1 | `0BSD OR MIT OR Apache-2.0` |
 | 1 | `BSD-3-Clause/MIT` |
 | 1 | `MIT / Apache-2.0` |
+| 1 | `CC0-1.0 OR MIT-0 OR Apache-2.0` |
 | 1 | `Apache-2.0 AND MIT` |
 | 1 | `(Apache-2.0 OR MIT) AND BSD-3-Clause` |
 | 1 | `(MIT OR Apache-2.0) AND OFL-1.1 AND Ubuntu-font-1.0` |
@@ -85,6 +86,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | combine | 4.6.9 | `MIT` | https://github.com/Marwes/combine |
 | concurrent-queue | 2.5.0 | `Apache-2.0 OR MIT` | https://github.com/smol-rs/concurrent-queue |
 | const-oid | 0.10.3 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/formats |
+| constant_time_eq | 0.6.1 | `CC0-1.0 OR MIT-0 OR Apache-2.0` | https://codeberg.org/cesarb/constant_time_eq |
 | core-foundation | 0.9.4 | `MIT OR Apache-2.0` | https://github.com/servo/core-foundation-rs |
 | core-foundation-sys | 0.8.7 | `MIT OR Apache-2.0` | https://github.com/servo/core-foundation-rs |
 | core-graphics | 0.23.2 | `MIT OR Apache-2.0` | https://github.com/servo/core-foundation-rs |
@@ -187,6 +189,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | ndk | 0.9.0 | `MIT OR Apache-2.0` | https://github.com/rust-mobile/ndk |
 | ndk-context | 0.1.1 | `MIT OR Apache-2.0` | https://github.com/rust-windowing/android-ndk-rs |
 | ndk-sys | 0.6.0+11769913 | `MIT OR Apache-2.0` | https://github.com/rust-mobile/ndk |
+| nix | 0.32.0 | `MIT` | https://github.com/nix-rust/nix |
 | nohash-hasher | 0.2.0 | `Apache-2.0 OR MIT` | https://github.com/paritytech/nohash-hasher |
 | nom | 8.0.0 | `MIT` | https://github.com/rust-bakery/nom |
 | num-traits | 0.2.19 | `MIT OR Apache-2.0` | https://github.com/rust-num/num-traits |
@@ -229,7 +232,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | profiling | 1.0.18 | `MIT OR Apache-2.0` | https://github.com/aclysma/profiling |
 | pxfm | 0.1.30 | `BSD-3-Clause OR Apache-2.0` | https://github.com/awxkee/pxfm |
 | quick-error | 2.0.1 | `MIT/Apache-2.0` | http://github.com/tailhook/quick-error |
-| quick-xml | 0.41.0 | `MIT` | https://github.com/tafia/quick-xml |
+| **quick-xml** | 0.41.0 | `MIT` | https://github.com/tafia/quick-xml |
 | quote | 1.0.47 | `MIT OR Apache-2.0` | https://github.com/dtolnay/quote |
 | r-efi | 6.0.0 | `MIT OR Apache-2.0 OR LGPL-2.1-or-later` | https://github.com/r-efi/r-efi |
 | rand | 0.10.4 | `MIT OR Apache-2.0` | https://github.com/rust-random/rand |
@@ -285,6 +288,7 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | tracing | 0.1.44 | `MIT` | https://github.com/tokio-rs/tracing |
 | tracing-core | 0.1.36 | `MIT` | https://github.com/tokio-rs/tracing |
 | type-map | 0.5.1 | `MIT/Apache-2.0` | https://github.com/kardeiz/type-map |
+| typed-path | 0.13.0 | `MIT OR Apache-2.0` | https://github.com/chipsenkbeil/typed-path |
 | typenum | 1.20.1 | `MIT OR Apache-2.0` | https://github.com/paholg/typenum |
 | unicode-bidi | 0.3.18 | `MIT OR Apache-2.0` | https://github.com/servo/unicode-bidi |
 | unicode-general-category | 1.1.0 | `Apache-2.0` | https://github.com/yeslogic/unicode-general-category |
@@ -358,5 +362,8 @@ Die vollständigen Lizenztexte stehen in `THIRD_PARTY_LICENSES.txt`.
 | xml-rs | 0.8.29 | `MIT` | https://github.com/kornelski/xml-rs |
 | zerocopy | 0.8.63 | `BSD-2-Clause OR Apache-2.0 OR MIT` | https://github.com/google/zerocopy |
 | zerocopy-derive | 0.8.63 | `BSD-2-Clause OR Apache-2.0 OR MIT` | https://github.com/google/zerocopy |
+| zeroize | 1.9.2 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/utils |
+| zeroize_derive | 1.5.0 | `Apache-2.0 OR MIT` | https://github.com/RustCrypto/utils |
+| **zip** | 9.7.0 | `MIT` | https://github.com/zip-rs/zip2 |
 | zune-core | 0.5.3 | `MIT OR Apache-2.0 OR Zlib` | https://github.com/etemesi254/zune-image |
 | zune-jpeg | 0.5.15 | `MIT OR Apache-2.0 OR Zlib` | https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg |

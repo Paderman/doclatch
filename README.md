@@ -17,6 +17,15 @@ Pure Rust, runs natively on Linux, Windows and macOS. Files are processed locall
 
 Supported: RC4 40/128-bit, AES-128, AES-256 (standard security handler, PDF 1.4 – 2.0).
 
+**Office documents:** editing, sheet and structure protection is removed from
+Word, Excel and PowerPoint files (`.docx`, `.xlsx`, `.pptx` including macro and template variants)
+and from OpenDocument files (`.odt`, `.ods`, `.odp`, `.odg` and templates):
+editing restrictions, sheet and workbook structure protection, protected sections,
+protected change tracking, “password to modify” and the read-only recommendation.
+This protection is not encryption, so no password is needed; only the protection entries are removed,
+all other parts of the file stay byte-for-byte unchanged. Password-encrypted Office files are
+recognised but not decrypted yet. Protecting is available for PDF files only.
+
 User interface in 11 languages (English by default, German, French, Spanish, Italian, Portuguese,
 Dutch, Polish, Turkish, Russian, Ukrainian), theme Auto/Dark/Light. The translations were created
 with AI assistance; corrections by native speakers are welcome (`src/i18n.rs`).
@@ -48,6 +57,7 @@ doclatch *.pdf -o ./unlocked/              # several files, output folder
 doclatch --in-place invoice.pdf            # overwrite the original
 DOCLATCH_PASSWORD=secret doclatch a.pdf    # password without shell history
 doclatch --gui a.pdf b.pdf                 # GUI with preselected files
+doclatch report.xlsx letter.odt            # → report_unlocked.xlsx, letter_unlocked.odt
 doclatch --protect --open-password secret --allow print contract.pdf   # → contract_protected.pdf
 doclatch --protect --allow print,copy *.pdf                            # restrictions only
 ```

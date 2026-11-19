@@ -1,4 +1,5 @@
 //! Kernlogik: PDF-Schutz erkennen und entfernen (reines Rust, plattformunabhängig).
+//! Office-Dokumente werden an [`crate::office`] weitergereicht.
 
 pub use lopdf::Permissions;
 use lopdf::{Document, LoadOptions};
@@ -32,6 +33,12 @@ pub enum UnlockError {
     PasswordMissing,
     NotEncrypted,
     Pdf(String),
+    /// Fehler in einem Office-Dokument (ZIP/XML).
+    Document(String),
+    /// Office-Dokument ist mit Passwort verschlüsselt (noch nicht unterstützt).
+    OfficeEncrypted,
+    /// Schützen ist nur für PDF möglich.
+    OfficeProtect,
     Io(std::io::Error),
 }
 
@@ -42,6 +49,9 @@ impl fmt::Display for UnlockError {
             UnlockError::PasswordMissing => f.write_str("password required"),
             UnlockError::NotEncrypted => f.write_str("file is not protected"),
             UnlockError::Pdf(e) => write!(f, "PDF error: {e}"),
+            UnlockError::Document(e) => write!(f, "document error: {e}"),
+            UnlockError::OfficeEncrypted => f.write_str("password-encrypted Office files are not supported yet"),
+            UnlockError::OfficeProtect => f.write_str("protection is available for PDF files only"),
             UnlockError::Io(e) => write!(f, "file error: {e}"),
         }
     }
@@ -79,10 +89,15 @@ pub struct Inspection {
     pub permissions: Option<Permissions>,
     /// Enthält digitale Signaturen – diese werden beim Entsperren/Schützen ungültig.
     pub signed: bool,
+    /// Office-Dokumente: gefundene Schutzarten (bei PDF immer leer).
+    pub locks: crate::office::Locks,
 }
 
 /// Ermittelt Schutzstatus und Berechtigungen einer Datei.
 pub fn inspect(path: &Path) -> Result<Inspection, UnlockError> {
+    if let Some(format) = crate::office::format_of(path) {
+        return crate::office::inspect(path, format);
+    }
     let bytes = std::fs::read(path)?;
     let doc = load(&bytes, None)?;
     // Ohne Passwort ist die Struktur verschlüsselter Dateien nicht lesbar; das Signatur-Merkmal
@@ -97,11 +112,16 @@ pub fn inspect(path: &Path) -> Result<Inspection, UnlockError> {
             .and_then(|d| d.get(b"P").ok())
             .and_then(|p| p.as_i64().ok())
             .map(|p| Permissions::from_bits_truncate(u64::from(p as i32 as u32)));
-        Inspection { protection: Protection::PasswordRequired, permissions, signed }
+        Inspection { protection: Protection::PasswordRequired, permissions, signed, locks: Default::default() }
     } else if let Some(state) = &doc.encryption_state {
-        Inspection { protection: Protection::RestrictionsOnly, permissions: Some(state.permissions()), signed }
+        Inspection {
+            protection: Protection::RestrictionsOnly,
+            permissions: Some(state.permissions()),
+            signed,
+            locks: Default::default(),
+        }
     } else {
-        Inspection { protection: Protection::None, permissions: None, signed }
+        Inspection { protection: Protection::None, permissions: None, signed, locks: Default::default() }
     })
 }
 
@@ -139,11 +159,13 @@ fn is_signed(doc: &Document) -> bool {
     false
 }
 
-/// Standard-Zielpfad: `name_unlocked.pdf` im selben Ordner (oder in `out_dir`).
+/// Standard-Zielpfad: `name_unlocked.pdf` (bzw. mit der Endung der Eingabe) im selben Ordner
+/// (oder in `out_dir`).
 pub fn default_output(input: &Path, out_dir: Option<&Path>) -> PathBuf {
     let stem = input.file_stem().and_then(|s| s.to_str()).unwrap_or("document");
+    let ext = input.extension().and_then(|e| e.to_str()).unwrap_or("pdf").to_ascii_lowercase();
     let dir = out_dir.map(Path::to_path_buf).or_else(|| input.parent().map(Path::to_path_buf)).unwrap_or_default();
-    dir.join(format!("{stem}_unlocked.pdf"))
+    dir.join(format!("{stem}_unlocked.{ext}"))
 }
 
 /// Lädt eine Datei vollständig entschlüsselt. Liefert auch, wie sie vorher geschützt war.
@@ -181,7 +203,11 @@ fn save(doc: &mut Document, output: &Path, size_hint: usize) -> Result<(), Unloc
 
 /// Entfernt Verschlüsselung und Einschränkungen und schreibt das Ergebnis nach `output`.
 /// `output` darf gleich `input` sein – dann wird atomar über eine Temp-Datei ersetzt.
+/// Bei Office-Dokumenten wird der Bearbeitungsschutz entfernt; ein Passwort ist dafür nicht nötig.
 pub fn unlock(input: &Path, output: &Path, password: Option<&str>) -> Result<Protection, UnlockError> {
+    if let Some(format) = crate::office::format_of(input) {
+        return crate::office::unlock(input, output, format);
+    }
     let bytes = std::fs::read(input)?;
     let (mut doc, protection) = open_plain(&bytes, password)?;
     if protection == Protection::None {
@@ -234,6 +260,9 @@ pub fn protect(
     opts: &ProtectOptions,
     current_password: Option<&str>,
 ) -> Result<(), UnlockError> {
+    if crate::office::format_of(input).is_some() {
+        return Err(UnlockError::OfficeProtect);
+    }
     use lopdf::encryption::crypt_filters::{Aes256CryptFilter, CryptFilter};
     use lopdf::{EncryptionState, EncryptionVersion};
     use std::collections::BTreeMap;
@@ -271,7 +300,7 @@ fn random_password() -> Result<String, UnlockError> {
     Ok(b.iter().map(|x| format!("{x:02x}")).collect())
 }
 
-fn write_atomic(target: &Path, data: &[u8]) -> std::io::Result<()> {
+pub(crate) fn write_atomic(target: &Path, data: &[u8]) -> std::io::Result<()> {
     let dir = target.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
     let name = target.file_name().and_then(|n| n.to_str()).unwrap_or("out.pdf");
     let tmp = dir.join(format!(".{name}.{}.tmp", std::process::id()));
@@ -436,7 +465,7 @@ pub(crate) mod tests {
         sample().save(&plain).unwrap();
         assert_eq!(
             inspect(&plain).unwrap(),
-            Inspection { protection: Protection::None, permissions: None, signed: false }
+            Inspection { protection: Protection::None, permissions: None, signed: false, locks: Default::default() }
         );
         std::fs::remove_dir_all(dir).ok();
     }
