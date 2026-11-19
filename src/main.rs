@@ -228,7 +228,11 @@ fn cli(args: Vec<String>) -> ExitCode {
                     open: file_opts.open_password.clone(),
                     owner: (!file_opts.owner_password.is_empty()).then(|| file_opts.owner_password.clone()),
                 });
-                if generate { format!("protected, open password: {}", file_opts.open_password) } else { "protected".into() }
+                if generate {
+                    format!("protected, open password: {}", file_opts.open_password)
+                } else {
+                    "protected".into()
+                }
             })
         } else {
             core::unlock(input, &target, password.as_deref()).map(|p| format!("unlocked, was: {p}"))

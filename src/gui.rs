@@ -2087,7 +2087,11 @@ mod tests {
         h.get_by_label(&format!("🔓  {}", fill(EN.unlock_n, "n", 1))).click();
         h.run_steps(1);
         wait(&mut h, |a| a.progress.is_none());
-        assert!(matches!(h.state().entries[0].status, Status::Failed(Fail::WrongPassword)), "{:?}", h.state().entries[0].status);
+        assert!(
+            matches!(h.state().entries[0].status, Status::Failed(Fail::WrongPassword)),
+            "{:?}",
+            h.state().entries[0].status
+        );
 
         h.state_mut().password = "Geheim-123".into();
         h.get_by_label(&format!("🔓  {}", fill(EN.unlock_n, "n", 1))).click();

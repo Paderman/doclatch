@@ -196,7 +196,9 @@ fn package_size(package: &[u8]) -> Result<usize, UnlockError> {
 }
 
 fn u32_at(b: &[u8], pos: usize) -> Result<u32, UnlockError> {
-    b.get(pos..pos + 4).map(|s| u32::from_le_bytes(s.try_into().unwrap())).ok_or_else(|| bad("encryption info truncated"))
+    b.get(pos..pos + 4)
+        .map(|s| u32::from_le_bytes(s.try_into().unwrap()))
+        .ok_or_else(|| bad("encryption info truncated"))
 }
 
 /// Schlüssel nach MS-OFFCRYPTO 2.3.4.7 (Standard Encryption).
@@ -578,11 +580,8 @@ pub fn decrypt_odf(bytes: &[u8], password: &str) -> Result<Vec<u8>, UnlockError>
         let entry = zip.by_index_raw(i).map_err(zerr)?;
         let name = entry.name().map_err(zerr)?.into_owned();
         let time = entry.last_modified();
-        let data = if name == "META-INF/manifest.xml" {
-            Some(strip_encryption_data(&manifest)?)
-        } else {
-            plain.remove(&name)
-        };
+        let data =
+            if name == "META-INF/manifest.xml" { Some(strip_encryption_data(&manifest)?) } else { plain.remove(&name) };
         match data {
             Some(d) => {
                 drop(entry);
